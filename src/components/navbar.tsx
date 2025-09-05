@@ -77,6 +77,14 @@ export function Navbar() {
               <div className="w-20 h-8 bg-gray-200 animate-pulse rounded"></div>
             ) : user ? (
               <div className="flex items-center space-x-3">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-black hover:text-gray-600"
+                  onClick={() => router.push("/dashboard")}
+                >
+                  Dashboard
+                </Button>
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <UserIcon className="h-4 w-4" />
                   <span>{user.email}</span>
@@ -158,6 +166,16 @@ export function Navbar() {
               <div className="pt-4 space-y-2">
                 {user ? (
                   <>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start text-black"
+                      onClick={() => {
+                        router.push("/dashboard")
+                        setIsMobileMenuOpen(false)
+                      }}
+                    >
+                      Dashboard
+                    </Button>
                     <div className="px-3 py-2 text-sm text-gray-600 flex items-center">
                       <UserIcon className="mr-2 h-4 w-4" />
                       {user.email}

@@ -27,14 +27,25 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // Do not run code between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-
   // IMPORTANT: DO NOT REMOVE auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: claimsData } = await supabase.auth.getClaims() // or getSession() depending on flow
+  // Protect dashboard routes
+  if (request.nextUrl.pathname.startsWith('/dashboard')) {
+    if (!user) {
+      // Redirect to login if not authenticated
+      const redirectUrl = new URL('/auth/login', request.url)
+      redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
+      return NextResponse.redirect(redirectUrl)
+    }
+  }
 
-  // Otherwise continue
+  // Redirect authenticated users away from auth pages (except reset-password)
+  if (request.nextUrl.pathname.startsWith('/auth') && 
+      !request.nextUrl.pathname.startsWith('/auth/reset-password') && 
+      user) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
   return supabaseResponse
 }
