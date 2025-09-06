@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -49,15 +49,15 @@ const testCategories = {
 }
 
 // NLP Attack Parameters based on your specifications
-const nlpParameters = {
+const getNlpParameters = (availableModels: string[]) => ({
   white: [
     { 
       key: "model_id", 
       label: "Model ID", 
       type: "select", 
       required: true,
-      description: "HuggingFace Model ID",
-      options: ["gpt-2", "bert-base-uncased", "roberta-base", "distilbert-base-uncased", "t5-small", "custom"]
+      description: "Available Model ID",
+      options: availableModels
     },
     { 
       key: "custom_dataset", 
@@ -86,12 +86,12 @@ const nlpParameters = {
       options: ["Phishing", "Prompt Injection", "Jailbreaking", "Data Extraction"]
     }
   ]
-}
+})
 
 export default function CreateTestPage() {
   const [selectedCategory, setSelectedCategory] = useState<TestCategory>("black")
   const [testConfig, setTestConfig] = useState<TestConfig>({
-    category: "black", 
+    category: "black",
     name: "",
     description: "",
     parameters: {}
@@ -99,6 +99,26 @@ export default function CreateTestPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const [availableModels, setAvailableModels] = useState<string[]>([])
+  const [modelsLoading, setModelsLoading] = useState(true)
+
+  // Fetch available models from backend
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const response = await pythonBackend.getAvailableModels()
+        setAvailableModels(response.models)
+      } catch (error) {
+        console.error('Failed to fetch models:', error)
+        // Fallback to hardcoded models
+        setAvailableModels(['vicuna-13b-v1.5', 'llama-2-7b-chat-hf', 'gpt-3.5-turbo-1106', 'gpt-4-0125-preview'])
+      } finally {
+        setModelsLoading(false)
+      }
+    }
+
+    fetchModels()
+  }, [])
 
   const handleParameterChange = (key: string, value: any) => {
     setTestConfig(prev => ({
@@ -173,7 +193,7 @@ export default function CreateTestPage() {
   }
 
   const getParameters = () => {
-    return nlpParameters[selectedCategory]
+    return getNlpParameters(availableModels)[selectedCategory]
   }
 
   const renderParameterInput = (param: any) => {
@@ -188,7 +208,7 @@ export default function CreateTestPage() {
             required={required}
           >
             <SelectTrigger>
-              <SelectValue placeholder={`Select ${label}`} />
+              <SelectValue placeholder={modelsLoading ? "Loading models..." : `Select ${label}`} />
             </SelectTrigger>
             <SelectContent>
               {options?.map((option: string) => (

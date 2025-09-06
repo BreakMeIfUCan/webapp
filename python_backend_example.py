@@ -8,6 +8,24 @@ from typing import Optional, Dict, Any
 import asyncio
 import httpx
 import json
+import random
+
+# Available models for NLP attacks
+AVAILABLE_MODELS = [
+    'vicuna-13b-v1.5',
+    'llama-2-7b-chat-hf',
+    'gpt-3.5-turbo-1106',
+    'gpt-4-0125-preview'
+]
+
+class AttackPayload(BaseModel):
+    model_name: str
+    behaviour: str
+
+class VisionAttackPayload(BaseModel):
+    attack_type: str
+    csv_file: Optional[str] = None    # path as string
+    image_file: Optional[str] = None  # path as string
 
 app = FastAPI()
 
@@ -28,6 +46,11 @@ class TestRequest(BaseModel):
     customDatasetPath: Optional[str] = None
     curlEndpoint: Optional[str] = None
     attackCategory: Optional[str] = None
+    
+    def validate_model(self):
+        """Validate that modelId is in the available models list"""
+        if self.modelId and self.modelId not in AVAILABLE_MODELS:
+            raise ValueError(f"Model {self.modelId} not in available models: {AVAILABLE_MODELS}")
 
 class TestResponse(BaseModel):
     success: bool
@@ -121,6 +144,14 @@ async def run_black_box_test(test_id: str, curl_endpoint: str, attack_category: 
 async def root():
     return {"message": "Python Backend is running!", "status": "healthy"}
 
+@app.get("/api/models")
+async def get_available_models():
+    """Get list of available models for NLP attacks"""
+    return {
+        "models": AVAILABLE_MODELS,
+        "count": len(AVAILABLE_MODELS)
+    }
+
 @app.options("/api/tests/submit")
 async def options_submit_test():
     return {"message": "OK"}
@@ -133,6 +164,14 @@ async def options_test_status(test_id: str):
 async def submit_test(request: TestRequest):
     """Submit a new test for processing"""
     try:
+        # Validate the request
+        if request.category not in ['white', 'black']:
+            raise HTTPException(status_code=400, detail="Category must be 'white' or 'black'")
+        
+        # Validate model for white box tests
+        if request.category == 'white' and request.modelId:
+            request.validate_model()
+        
         if request.category == "white":
             if not request.modelId or not request.customDatasetPath:
                 raise HTTPException(status_code=400, detail="White box tests require modelId and customDatasetPath")

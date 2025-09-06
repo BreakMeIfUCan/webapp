@@ -29,11 +29,42 @@ export interface PythonTestResponse {
   error?: string
 }
 
+export interface AvailableModelsResponse {
+  models: string[]
+  count: number
+}
+
 class PythonBackendService {
   private baseUrl: string
 
   constructor() {
     this.baseUrl = process.env.PYTHON_BACKEND_URL || 'http://localhost:8000'
+  }
+
+  // Get available models from Python backend
+  async getAvailableModels(): Promise<AvailableModelsResponse> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/models`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Error fetching available models:', error)
+      // Return fallback models if backend is not available
+      return {
+        models: ['vicuna-13b-v1.5', 'llama-2-7b-chat-hf', 'gpt-3.5-turbo-1106', 'gpt-4-0125-preview'],
+        count: 4
+      }
+    }
   }
 
   // Submit test to Python backend
