@@ -21,6 +21,8 @@ import {
   Target,
   Loader2
 } from "lucide-react"
+import { createTest } from "@/data-access/tests"
+import { pythonBackend } from "@/lib/python-backend"
 
 type TestCategory = "black" | "white"
 
@@ -115,20 +117,56 @@ export default function CreateTestPage() {
     setSuccess("")
 
     try {
-      const config = {
-        ...testConfig,
-        category: selectedCategory
+      // Prepare test data
+      const testData = {
+        name: testConfig.name,
+        description: testConfig.description,
+        category: selectedCategory,
+        modelId: selectedCategory === 'white' ? testConfig.parameters.model_id : undefined,
+        customDatasetPath: selectedCategory === 'white' ? testConfig.parameters.custom_dataset?.name : undefined,
+        curlEndpoint: selectedCategory === 'black' ? testConfig.parameters.curl_endpoint : undefined,
+        attackCategory: selectedCategory === 'black' ? testConfig.parameters.attack_category : undefined,
+      }
+
+      // Create test in database
+      const result = await createTest(testData)
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create test')
+      }
+
+      // Submit to Python backend
+      const pythonRequest = {
+        testId: result.testId!,
+        category: selectedCategory,
+        modelId: testData.modelId,
+        customDatasetPath: testData.customDatasetPath,
+        curlEndpoint: testData.curlEndpoint,
+        attackCategory: testData.attackCategory,
+      }
+
+      const pythonResponse = await pythonBackend.submitTest(pythonRequest)
+      
+      if (!pythonResponse.success) {
+        console.warn('Python backend submission failed:', pythonResponse.error)
+        setSuccess("Test created successfully! (Backend submission pending)")
+      } else {
+        setSuccess("Test created and submitted successfully!")
       }
       
-      console.log("NLP Test Configuration:", config)
+      // Reset form
+      setTestConfig({
+        category: "black",
+        name: "",
+        description: "",
+        parameters: {}
+      })
+      setSelectedCategory("black")
       
-      // TODO: Send to Python backend for sandboxing and testing
-      // await createTest(config)
-      
-      setSuccess("Test configuration saved successfully!")
       setTimeout(() => setSuccess(""), 3000)
     } catch (err) {
-      setError("Failed to create test. Please try again.")
+      console.error('Error creating test:', err)
+      setError(err instanceof Error ? err.message : "Failed to create test. Please try again.")
     } finally {
       setIsLoading(false)
     }

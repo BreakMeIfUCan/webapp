@@ -18,80 +18,30 @@ import {
   BarChart3
 } from "lucide-react"
 import Link from "next/link"
+import { getUserTests, getTestStats, getAttackCategoryStats } from "@/data-access/tests"
 
-// Placeholder data - replace with server actions later
-const stats = {
-  totalTests: 12,
-  completedTests: 8,
-  runningTests: 2,
-  failedTests: 2,
-  avgASR: 68,
-  avgLatency: "2.1s",
-  totalAttacks: 45,
-  activeTests: 2,
-}
+export default async function DashboardPage() {
+  // Fetch real data from server actions
+  const [stats, recentTests, attackCategories] = await Promise.all([
+    getTestStats(),
+    getUserTests(),
+    getAttackCategoryStats()
+  ])
 
-const recentTests = [
-  {
-    id: "test-001",
-    name: "GPT-2 Phishing Attack",
-    type: "black",
-    status: "completed",
-    createdAt: "2024-01-15T10:30:00Z",
-    duration: "2m 34s",
-    asr: 75,
-    attackCategory: "Phishing",
-  },
-  {
-    id: "test-002", 
-    name: "BERT White Box Analysis",
-    type: "white",
-    status: "running",
-    createdAt: "2024-01-15T11:15:00Z",
-    duration: "1m 12s",
-    asr: null,
-    modelId: "bert-base-uncased",
-  },
-  {
-    id: "test-003",
-    name: "RoBERTa Prompt Injection",
-    type: "black",
-    status: "failed",
-    createdAt: "2024-01-15T09:45:00Z",
-    duration: "0m 45s",
-    asr: 0,
-    attackCategory: "Prompt Injection",
-  },
-  {
-    id: "test-004",
-    name: "DistilBERT Jailbreaking",
-    type: "black",
-    status: "completed",
-    createdAt: "2024-01-14T16:20:00Z",
-    duration: "3m 12s",
-    asr: 45,
-    attackCategory: "Jailbreaking",
-  },
-  {
-    id: "test-005",
-    name: "T5 Data Extraction",
-    type: "white",
-    status: "completed",
-    createdAt: "2024-01-14T14:30:00Z",
-    duration: "1m 58s",
-    asr: 68,
-    modelId: "t5-small",
-  }
-]
-
-const attackCategories = [
-  { name: "Phishing", count: 15, asr: 75 },
-  { name: "Prompt Injection", count: 12, asr: 60 },
-  { name: "Jailbreaking", count: 8, asr: 45 },
-  { name: "Data Extraction", count: 10, asr: 55 }
-]
-
-export default function DashboardPage() {
+  // Get recent tests (limit to 5)
+  const recentTestsData = recentTests.slice(0, 5).map(test => ({
+    id: test.id,
+    name: test.name,
+    type: test.category,
+    status: test.status,
+    createdAt: test.createdAt,
+    duration: test.completedAt ? 
+      `${Math.round((new Date(test.completedAt).getTime() - new Date(test.createdAt).getTime()) / 60000)}m` : 
+      "Running",
+    asr: test.asr ? Math.round(parseFloat(test.asr) * 100) : null,
+    attackCategory: test.attackCategory,
+    modelId: test.modelId,
+  }))
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -207,7 +157,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentTests.map((test) => (
+              {recentTestsData.map((test) => (
                 <Link key={test.id} href={`/dashboard/results/${test.id}`}>
                   <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors">
                     <div className="space-y-1">

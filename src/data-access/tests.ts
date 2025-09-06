@@ -1,232 +1,304 @@
 "use server"
 
+import { db, tests, users } from '@/db'
+import { eq, desc, and } from 'drizzle-orm'
 import { createClient } from '@/utils/supabase/server'
+import { revalidatePath } from 'next/cache'
 
-// Types for test data
-export interface Test {
-  id: string
+// Get current user
+async function getCurrentUser() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) {
+    throw new Error('User not authenticated')
+  }
+  
+  // Get or create user in our database
+  const existingUser = await db.select().from(users).where(eq(users.email, user.email!)).limit(1)
+  
+  if (existingUser.length === 0) {
+    const [newUser] = await db.insert(users).values({
+      email: user.email!,
+      firstName: user.user_metadata?.first_name || null,
+      lastName: user.user_metadata?.last_name || null,
+    }).returning()
+    return newUser
+  }
+  
+  return existingUser[0]
+}
+
+// Create a new test
+export async function createTest(data: {
   name: string
   description?: string
-  model: string
-  testType: string
-  status: 'pending' | 'running' | 'completed' | 'failed'
-  createdAt: string
-  completedAt?: string
-  duration?: string
-  successRate?: number
-  totalPrompts: number
-  userId: string
-}
-
-export interface TestMetrics {
-  totalTests: number
-  completedTests: number
-  runningTests: number
-  failedTests: number
-  successRate: number
-  averageDuration: string
-  totalPrompts: number
-  modelsTested: number
-}
-
-// Server Actions - Placeholders for implementation
-
-export async function getTests(userId: string): Promise<{ success: boolean; data?: Test[]; error?: string }> {
+  category: 'black' | 'white'
+  modelId?: string
+  customDatasetPath?: string
+  curlEndpoint?: string
+  attackCategory?: string
+}) {
   try {
-    const supabase = await createClient()
+    const user = await getCurrentUser()
     
-    // TODO: Implement database query to fetch user's tests
-    // const { data, error } = await supabase
-    //   .from('tests')
-    //   .select('*')
-    //   .eq('user_id', userId)
-    //   .order('created_at', { ascending: false })
+    const [test] = await db.insert(tests).values({
+      userId: user.id,
+      name: data.name,
+      description: data.description,
+      category: data.category,
+      modelId: data.modelId || null,
+      customDatasetPath: data.customDatasetPath || null,
+      curlEndpoint: data.curlEndpoint || null,
+      attackCategory: data.attackCategory || null,
+      status: 'pending',
+    }).returning()
     
-    // Placeholder data
-    const placeholderTests: Test[] = [
-      {
-        id: "test-001",
-        name: "GPT-4 Adversarial Test",
-        model: "GPT-4",
-        testType: "Adversarial",
-        status: "completed",
-        createdAt: "2024-01-15T10:30:00Z",
-        completedAt: "2024-01-15T10:32:34Z",
-        duration: "2m 34s",
-        successRate: 85.2,
-        totalPrompts: 1000,
-        userId: userId,
-      },
-      // Add more placeholder tests as needed
-    ]
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/results')
     
-    return { success: true, data: placeholderTests, error: undefined }
-  } catch (error) {
-    console.error('Error fetching tests:', error)
-    return { 
-      success: false, 
-      data: undefined, 
-      error: error instanceof Error ? error.message : 'Failed to fetch tests' 
-    }
-  }
-}
-
-export async function getTestById(testId: string): Promise<{ success: boolean; data?: Test; error?: string }> {
-  try {
-    const supabase = await createClient()
-    
-    // TODO: Implement database query to fetch specific test
-    // const { data, error } = await supabase
-    //   .from('tests')
-    //   .select('*')
-    //   .eq('id', testId)
-    //   .single()
-    
-    return { success: true, data: undefined, error: "Not implemented yet" }
-  } catch (error) {
-    console.error('Error fetching test:', error)
-    return { 
-      success: false, 
-      data: undefined, 
-      error: error instanceof Error ? error.message : 'Failed to fetch test' 
-    }
-  }
-}
-
-export async function createTest(testData: {
-  name: string
-  description?: string
-  model: string
-  testType: string
-  prompts: string[]
-  configuration?: Record<string, any>
-}): Promise<{ success: boolean; data?: Test; error?: string }> {
-  try {
-    const supabase = await createClient()
-    
-    // TODO: Get current user
-    // const { data: { user }, error: userError } = await supabase.auth.getUser()
-    // if (userError || !user) {
-    //   return { success: false, data: undefined, error: 'User not authenticated' }
-    // }
-    
-    // TODO: Implement database insert for new test
-    // const { data, error } = await supabase
-    //   .from('tests')
-    //   .insert({
-    //     name: testData.name,
-    //     description: testData.description,
-    //     model: testData.model,
-    //     test_type: testData.testType,
-    //     status: 'pending',
-    //     user_id: user.id,
-    //     total_prompts: testData.prompts.length,
-    //     configuration: testData.configuration,
-    //   })
-    //   .select()
-    //   .single()
-    
-    // TODO: Queue test execution job
-    // await queueTestExecution(data.id, testData.prompts)
-    
-    return { success: true, data: undefined, error: "Test creation not implemented yet" }
+    return { success: true, testId: test.id }
   } catch (error) {
     console.error('Error creating test:', error)
-    return { 
-      success: false, 
-      data: undefined, 
-      error: error instanceof Error ? error.message : 'Failed to create test' 
-    }
+    return { success: false, error: 'Failed to create test' }
   }
 }
 
-export async function deleteTest(testId: string): Promise<{ success: boolean; error?: string }> {
+// Get all tests for current user
+export async function getUserTests() {
   try {
-    const supabase = await createClient()
+    const user = await getCurrentUser()
     
-    // TODO: Implement database delete
-    // const { error } = await supabase
-    //   .from('tests')
-    //   .delete()
-    //   .eq('id', testId)
+    const userTests = await db
+      .select()
+      .from(tests)
+      .where(eq(tests.userId, user.id))
+      .orderBy(desc(tests.createdAt))
     
-    return { success: true, error: undefined }
+    return userTests.map(test => ({
+      ...test,
+      createdAt: test.createdAt.toISOString(),
+      completedAt: test.completedAt?.toISOString(),
+    }))
   } catch (error) {
-    console.error('Error deleting test:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to delete test' 
-    }
+    console.error('Error fetching tests:', error)
+    return []
   }
 }
 
-export async function getTestMetrics(userId: string): Promise<{ success: boolean; data?: TestMetrics; error?: string }> {
+// Get a specific test by ID
+export async function getTestById(testId: string) {
   try {
-    const supabase = await createClient()
+    const user = await getCurrentUser()
     
-    // TODO: Implement database aggregation queries
-    // const { data: tests, error } = await supabase
-    //   .from('tests')
-    //   .select('status, success_rate, duration, total_prompts, model')
-    //   .eq('user_id', userId)
+    const [test] = await db
+      .select()
+      .from(tests)
+      .where(and(eq(tests.id, testId), eq(tests.userId, user.id)))
+      .limit(1)
     
-    // Placeholder metrics
-    const placeholderMetrics: TestMetrics = {
-      totalTests: 24,
-      completedTests: 18,
-      runningTests: 3,
-      failedTests: 3,
-      successRate: 78.5,
-      averageDuration: "3m 24s",
-      totalPrompts: 12500,
-      modelsTested: 8,
+    if (!test) return null
+    
+    return {
+      ...test,
+      createdAt: test.createdAt.toISOString(),
+      completedAt: test.completedAt?.toISOString(),
     }
-    
-    return { success: true, data: placeholderMetrics, error: undefined }
   } catch (error) {
-    console.error('Error fetching metrics:', error)
-    return { 
-      success: false, 
-      data: undefined, 
-      error: error instanceof Error ? error.message : 'Failed to fetch metrics' 
-    }
+    console.error('Error fetching test:', error)
+    return null
   }
 }
 
-export async function exportTestData(testId: string, format: 'json' | 'csv' = 'json'): Promise<{ success: boolean; data?: string; error?: string }> {
+// Update test status and results (for authenticated users)
+export async function updateTestStatus(testId: string, status: 'pending' | 'running' | 'completed' | 'failed', data?: {
+  progress?: number
+  asr?: number
+  accuracy?: number
+  recall?: number
+  precision?: number
+  f1?: number
+  latency?: number
+  tokenUsage?: number
+  categoryWiseASR?: any
+  error?: string
+}) {
   try {
-    // TODO: Implement data export functionality
-    // 1. Fetch test data and results
-    // 2. Format data according to requested format
-    // 3. Generate downloadable file
+    const user = await getCurrentUser()
     
-    return { success: true, data: "Export functionality not implemented yet", error: undefined }
-  } catch (error) {
-    console.error('Error exporting test data:', error)
-    return { 
-      success: false, 
-      data: undefined, 
-      error: error instanceof Error ? error.message : 'Failed to export test data' 
+    const updateData: any = {
+      status,
+      updatedAt: new Date(),
     }
-  }
-}
-
-export async function updateTestStatus(testId: string, status: Test['status']): Promise<{ success: boolean; error?: string }> {
-  try {
-    const supabase = await createClient()
     
-    // TODO: Implement status update
-    // const { error } = await supabase
-    //   .from('tests')
-    //   .update({ status, updated_at: new Date().toISOString() })
-    //   .eq('id', testId)
+    if (data?.progress !== undefined) updateData.progress = data.progress
+    if (data?.asr !== undefined) updateData.asr = data.asr
+    if (data?.accuracy !== undefined) updateData.accuracy = data.accuracy
+    if (data?.recall !== undefined) updateData.recall = data.recall
+    if (data?.precision !== undefined) updateData.precision = data.precision
+    if (data?.f1 !== undefined) updateData.f1 = data.f1
+    if (data?.latency !== undefined) updateData.latency = data.latency
+    if (data?.tokenUsage !== undefined) updateData.tokenUsage = data.tokenUsage
+    if (data?.categoryWiseASR !== undefined) updateData.categoryWiseASR = data.categoryWiseASR
+    if (data?.error) updateData.error = data.error
+    if (status === 'completed' || status === 'failed') {
+      updateData.completedAt = new Date()
+    }
     
-    return { success: true, error: undefined }
+    await db
+      .update(tests)
+      .set(updateData)
+      .where(and(eq(tests.id, testId), eq(tests.userId, user.id)))
+    
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/results')
+    revalidatePath(`/dashboard/results/${testId}`)
+    
+    return { success: true }
   } catch (error) {
     console.error('Error updating test status:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to update test status' 
+    return { success: false, error: 'Failed to update test status' }
+  }
+}
+
+// Update test status from webhook (no user authentication required)
+export async function updateTestStatusFromWebhook(testId: string, status: 'pending' | 'running' | 'completed' | 'failed', data?: {
+  progress?: number
+  asr?: number
+  accuracy?: number
+  recall?: number
+  precision?: number
+  f1?: number
+  latency?: number
+  tokenUsage?: number
+  categoryWiseASR?: any
+  error?: string
+}) {
+  try {
+    const updateData: any = {
+      status,
+      updatedAt: new Date(),
     }
+    
+    if (data?.progress !== undefined) updateData.progress = data.progress
+    if (data?.asr !== undefined) updateData.asr = data.asr
+    if (data?.accuracy !== undefined) updateData.accuracy = data.accuracy
+    if (data?.recall !== undefined) updateData.recall = data.recall
+    if (data?.precision !== undefined) updateData.precision = data.precision
+    if (data?.f1 !== undefined) updateData.f1 = data.f1
+    if (data?.latency !== undefined) updateData.latency = data.latency
+    if (data?.tokenUsage !== undefined) updateData.tokenUsage = data.tokenUsage
+    if (data?.categoryWiseASR !== undefined) updateData.categoryWiseASR = data.categoryWiseASR
+    if (data?.error) updateData.error = data.error
+    if (status === 'completed' || status === 'failed') {
+      updateData.completedAt = new Date()
+    }
+    
+    await db
+      .update(tests)
+      .set(updateData)
+      .where(eq(tests.id, testId))
+    
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/results')
+    revalidatePath(`/dashboard/results/${testId}`)
+    
+    return { success: true }
+  } catch (error) {
+    console.error('Error updating test status from webhook:', error)
+    return { success: false, error: 'Failed to update test status' }
+  }
+}
+
+// Get test statistics for dashboard
+export async function getTestStats() {
+  try {
+    const user = await getCurrentUser()
+    
+    const userTests = await db
+      .select({
+        status: tests.status,
+        asr: tests.asr,
+        latency: tests.latency,
+      })
+      .from(tests)
+      .where(eq(tests.userId, user.id))
+    
+    const totalTests = userTests.length
+    const completedTests = userTests.filter(t => t.status === 'completed').length
+    const runningTests = userTests.filter(t => t.status === 'running').length
+    const failedTests = userTests.filter(t => t.status === 'failed').length
+    
+    // Calculate average ASR
+    const completedWithASR = userTests.filter(t => t.status === 'completed' && t.asr)
+    const avgASR = completedWithASR.length > 0 
+      ? Math.round(completedWithASR.reduce((sum, t) => sum + (parseFloat(t.asr!) * 100), 0) / completedWithASR.length)
+      : 0
+    
+    // Calculate average latency
+    const testsWithLatency = userTests.filter(t => t.status === 'completed' && t.latency)
+    const avgLatency = testsWithLatency.length > 0
+      ? (testsWithLatency.reduce((sum, t) => sum + parseFloat(t.latency!), 0) / testsWithLatency.length).toFixed(1) + 's'
+      : '0.0s'
+    
+    return {
+      totalTests,
+      completedTests,
+      runningTests,
+      failedTests,
+      avgASR,
+      avgLatency,
+      totalAttacks: completedTests, // Simple count
+      activeTests: runningTests,
+    }
+  } catch (error) {
+    console.error('Error fetching test stats:', error)
+    return {
+      totalTests: 0,
+      completedTests: 0,
+      runningTests: 0,
+      failedTests: 0,
+      avgASR: 0,
+      avgLatency: '0.0s',
+      totalAttacks: 0,
+      activeTests: 0,
+    }
+  }
+}
+
+// Get attack category statistics
+export async function getAttackCategoryStats() {
+  try {
+    const user = await getCurrentUser()
+    
+    const userTests = await db
+      .select({
+        attackCategory: tests.attackCategory,
+        asr: tests.asr,
+      })
+      .from(tests)
+      .where(and(eq(tests.userId, user.id), eq(tests.status, 'completed')))
+    
+    const categoryMap = new Map<string, { count: number, totalASR: number }>()
+    
+    userTests.forEach(test => {
+      if (test.attackCategory && test.asr) {
+        const category = test.attackCategory
+        const current = categoryMap.get(category) || { count: 0, totalASR: 0 }
+        categoryMap.set(category, {
+          count: current.count + 1,
+          totalASR: current.totalASR + (parseFloat(test.asr) * 100)
+        })
+      }
+    })
+    
+    return Array.from(categoryMap.entries()).map(([name, data]) => ({
+      name,
+      count: data.count,
+      asr: Math.round(data.totalASR / data.count)
+    }))
+  } catch (error) {
+    console.error('Error fetching attack category stats:', error)
+    return []
   }
 }
