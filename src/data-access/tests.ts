@@ -38,6 +38,7 @@ export async function createTest(data: {
   customDatasetPath?: string
   curlEndpoint?: string
   attackCategory?: string
+  defenseType?: string
 }) {
   try {
     const user = await getCurrentUser()
@@ -51,6 +52,7 @@ export async function createTest(data: {
       customDatasetPath: data.customDatasetPath || null,
       curlEndpoint: data.curlEndpoint || null,
       attackCategory: data.attackCategory || null,
+      defenseType: data.defenseType || null,
       status: 'pending',
     }).returning()
     
@@ -172,6 +174,14 @@ export async function updateTestStatusFromWebhook(testId: string, status: 'pendi
   latency?: number
   tokenUsage?: number
   categoryWiseASR?: any
+  defenseASR?: number
+  defenseAccuracy?: number
+  defenseRecall?: number
+  defensePrecision?: number
+  defenseF1?: number
+  defenseLatency?: number
+  defenseTokenUsage?: number
+  defenseCategoryWiseASR?: any
   error?: string
 }) {
   try {
@@ -189,6 +199,14 @@ export async function updateTestStatusFromWebhook(testId: string, status: 'pendi
     if (data?.latency !== undefined) updateData.latency = data.latency
     if (data?.tokenUsage !== undefined) updateData.tokenUsage = data.tokenUsage
     if (data?.categoryWiseASR !== undefined) updateData.categoryWiseASR = data.categoryWiseASR
+    if (data?.defenseASR !== undefined) updateData.defenseASR = data.defenseASR
+    if (data?.defenseAccuracy !== undefined) updateData.defenseAccuracy = data.defenseAccuracy
+    if (data?.defenseRecall !== undefined) updateData.defenseRecall = data.defenseRecall
+    if (data?.defensePrecision !== undefined) updateData.defensePrecision = data.defensePrecision
+    if (data?.defenseF1 !== undefined) updateData.defenseF1 = data.defenseF1
+    if (data?.defenseLatency !== undefined) updateData.defenseLatency = data.defenseLatency
+    if (data?.defenseTokenUsage !== undefined) updateData.defenseTokenUsage = data.defenseTokenUsage
+    if (data?.defenseCategoryWiseASR !== undefined) updateData.defenseCategoryWiseASR = data.defenseCategoryWiseASR
     if (data?.error) updateData.error = data.error
     if (status === 'completed' || status === 'failed') {
       updateData.completedAt = new Date()

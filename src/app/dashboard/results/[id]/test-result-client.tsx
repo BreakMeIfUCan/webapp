@@ -38,6 +38,7 @@ interface TestData {
   description?: string
   progress?: number
   error?: string
+  defenseType?: string
   results?: {
     asr?: number
     accuracy?: number
@@ -47,6 +48,14 @@ interface TestData {
     latency?: number
     tokenUsage?: number
     categoryWiseASR?: any
+    defenseASR?: number
+    defenseAccuracy?: number
+    defenseRecall?: number
+    defensePrecision?: number
+    defenseF1?: number
+    defenseLatency?: number
+    defenseTokenUsage?: number
+    defenseCategoryWiseASR?: any
   }
 }
 
@@ -166,6 +175,83 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
             </CardContent>
           </Card>
         </div>
+
+        {/* Defense Results */}
+        {testData.defenseType && results?.defenseASR && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-blue-500" />
+              <h3 className="text-lg font-semibold">Defense Results ({testData.defenseType})</h3>
+            </div>
+            
+            {/* Defense ASR Pie Chart */}
+            <Card>
+              <CardContent className="pt-6">
+                <ASRPieChart asr={results.defenseASR} size="lg" title="ASR with Defense" />
+              </CardContent>
+            </Card>
+
+            {/* Defense Metrics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Defense ASR
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">
+                    {results?.defenseASR ? `${Math.round(results.defenseASR * 100)}%` : "N/A"}
+                  </div>
+                  <p className="text-xs text-muted-foreground">ASR with Defense</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <TrendingDown className="h-4 w-4" />
+                    Defense Accuracy
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">
+                    {results?.defenseAccuracy ? `${Math.round(results.defenseAccuracy * 100)}%` : "N/A"}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Accuracy with Defense</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" />
+                    Defense Recall
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">
+                    {results?.defenseRecall ? `${Math.round(results.defenseRecall * 100)}%` : "N/A"}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Recall with Defense</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Zap className="h-4 w-4" />
+                    Defense F1
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">
+                    {results?.defenseF1 ? `${Math.round(results.defenseF1 * 100)}%` : "N/A"}
+                  </div>
+                  <p className="text-xs text-muted-foreground">F1 with Defense</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
 
         {/* Detailed Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -300,6 +386,88 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
         {results?.categoryWiseASR && (
           <SingleCategoryASR categoryWiseASR={results.categoryWiseASR} />
         )}
+
+        {/* Defense Results */}
+        {testData.defenseType && results?.defenseASR && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-blue-500" />
+              <h3 className="text-lg font-semibold">Defense Results ({testData.defenseType})</h3>
+            </div>
+            
+            {/* Defense ASR Pie Chart */}
+            <Card>
+              <CardContent className="pt-6">
+                <ASRPieChart asr={results.defenseASR} size="lg" title="ASR with Defense" />
+              </CardContent>
+            </Card>
+
+            {/* Defense Metrics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Defense ASR
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">
+                    {results?.defenseASR ? `${Math.round(results.defenseASR * 100)}%` : "N/A"}
+                  </div>
+                  <p className="text-xs text-muted-foreground">ASR with Defense</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Defense Latency
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">
+                    {results?.defenseLatency ? `${results.defenseLatency}s` : "N/A"}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Latency with Defense</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Zap className="h-4 w-4" />
+                    Defense Tokens
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">
+                    {results?.defenseTokenUsage ? `${results.defenseTokenUsage.toLocaleString()}` : "N/A"}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Tokens with Defense</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Target className="h-4 w-4" />
+                    Defense Category
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">
+                    {testData.attackCategory || "N/A"}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Attack Type</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Defense Category ASR */}
+            {results?.defenseCategoryWiseASR && (
+              <SingleCategoryASR categoryWiseASR={results.defenseCategoryWiseASR} />
+            )}
+          </div>
+        )}
       </div>
     )
   }
@@ -350,6 +518,14 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
                 {testData.modelId || testData.attackCategory || "N/A"}
               </p>
             </div>
+            {testData.defenseType && (
+              <div className="space-y-1">
+                <p className="font-medium">Defense</p>
+                <Badge variant="secondary">
+                  {testData.defenseType}
+                </Badge>
+              </div>
+            )}
             <div className="space-y-1">
               <p className="font-medium">Created</p>
               <p className="text-muted-foreground">

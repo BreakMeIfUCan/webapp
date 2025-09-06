@@ -49,7 +49,7 @@ const testCategories = {
 }
 
 // NLP Attack Parameters based on your specifications
-const getNlpParameters = (availableModels: string[]) => ({
+const getNlpParameters = (availableModels: string[], availableDefenses: string[]) => ({
   white: [
     { 
       key: "model_id", 
@@ -66,6 +66,14 @@ const getNlpParameters = (availableModels: string[]) => ({
       required: true,
       description: "CSV file containing test data",
       accept: ".csv"
+    },
+    { 
+      key: "defense_type", 
+      label: "Defense Type", 
+      type: "select", 
+      required: false,
+      description: "NLP Defense to apply (optional)",
+      options: ["None", ...availableDefenses]
     }
   ],
   black: [
@@ -84,6 +92,14 @@ const getNlpParameters = (availableModels: string[]) => ({
       required: true,
       description: "Type of attack to perform",
       options: ["Phishing", "Prompt Injection", "Jailbreaking", "Data Extraction"]
+    },
+    { 
+      key: "defense_type", 
+      label: "Defense Type", 
+      type: "select", 
+      required: false,
+      description: "NLP Defense to apply (optional)",
+      options: ["None", ...availableDefenses]
     }
   ]
 })
@@ -101,23 +117,31 @@ export default function CreateTestPage() {
   const [success, setSuccess] = useState("")
   const [availableModels, setAvailableModels] = useState<string[]>([])
   const [modelsLoading, setModelsLoading] = useState(true)
+  const [availableDefenses, setAvailableDefenses] = useState<string[]>([])
+  const [defensesLoading, setDefensesLoading] = useState(true)
 
-  // Fetch available models from backend
+  // Fetch available models and defenses from backend
   useEffect(() => {
-    const fetchModels = async () => {
+    const fetchData = async () => {
       try {
-        const response = await pythonBackend.getAvailableModels()
-        setAvailableModels(response.models)
+        const [modelsResponse, defensesResponse] = await Promise.all([
+          pythonBackend.getAvailableModels(),
+          pythonBackend.getAvailableDefenses()
+        ])
+        setAvailableModels(modelsResponse.models)
+        setAvailableDefenses(defensesResponse.defenses)
       } catch (error) {
-        console.error('Failed to fetch models:', error)
-        // Fallback to hardcoded models
+        console.error('Failed to fetch data:', error)
+        // Fallback to hardcoded data
         setAvailableModels(['vicuna-13b-v1.5', 'llama-2-7b-chat-hf', 'gpt-3.5-turbo-1106', 'gpt-4-0125-preview'])
+        setAvailableDefenses(['sanitize_text', 'meta-prompt wrapper', 'Llama Guard'])
       } finally {
         setModelsLoading(false)
+        setDefensesLoading(false)
       }
     }
 
-    fetchModels()
+    fetchData()
   }, [])
 
   const handleParameterChange = (key: string, value: any) => {
@@ -137,16 +161,21 @@ export default function CreateTestPage() {
     setSuccess("")
 
     try {
-      // Prepare test data
-      const testData = {
-        name: testConfig.name,
-        description: testConfig.description,
-        category: selectedCategory,
-        modelId: selectedCategory === 'white' ? testConfig.parameters.model_id : undefined,
-        customDatasetPath: selectedCategory === 'white' ? testConfig.parameters.custom_dataset?.name : undefined,
-        curlEndpoint: selectedCategory === 'black' ? testConfig.parameters.curl_endpoint : undefined,
-        attackCategory: selectedCategory === 'black' ? testConfig.parameters.attack_category : undefined,
-      }
+          // Prepare test data
+          const defenseType = testConfig.parameters.defense_type && testConfig.parameters.defense_type !== 'None' 
+            ? testConfig.parameters.defense_type 
+            : undefined
+
+          const testData = {
+            name: testConfig.name,
+            description: testConfig.description,
+            category: selectedCategory,
+            modelId: selectedCategory === 'white' ? testConfig.parameters.model_id : undefined,
+            customDatasetPath: selectedCategory === 'white' ? testConfig.parameters.custom_dataset?.name : undefined,
+            curlEndpoint: selectedCategory === 'black' ? testConfig.parameters.curl_endpoint : undefined,
+            attackCategory: selectedCategory === 'black' ? testConfig.parameters.attack_category : undefined,
+            defenseType: defenseType,
+          }
 
       // Create test in database
       const result = await createTest(testData)
@@ -155,15 +184,16 @@ export default function CreateTestPage() {
         throw new Error(result.error || 'Failed to create test')
       }
 
-      // Submit to Python backend
-      const pythonRequest = {
-        testId: result.testId!,
-        category: selectedCategory,
-        modelId: testData.modelId,
-        customDatasetPath: testData.customDatasetPath,
-        curlEndpoint: testData.curlEndpoint,
-        attackCategory: testData.attackCategory,
-      }
+          // Submit to Python backend
+          const pythonRequest = {
+            testId: result.testId!,
+            category: selectedCategory,
+            modelId: testData.modelId,
+            customDatasetPath: testData.customDatasetPath,
+            curlEndpoint: testData.curlEndpoint,
+            attackCategory: testData.attackCategory,
+            defenseType: testData.defenseType,
+          }
 
       const pythonResponse = await pythonBackend.submitTest(pythonRequest)
       
@@ -193,7 +223,7 @@ export default function CreateTestPage() {
   }
 
   const getParameters = () => {
-    return getNlpParameters(availableModels)[selectedCategory]
+    return getNlpParameters(availableModels, availableDefenses)[selectedCategory]
   }
 
   const renderParameterInput = (param: any) => {
@@ -208,7 +238,11 @@ export default function CreateTestPage() {
             required={required}
           >
             <SelectTrigger>
-              <SelectValue placeholder={modelsLoading ? "Loading models..." : `Select ${label}`} />
+              <SelectValue placeholder={
+                (modelsLoading && key === "model_id") || (defensesLoading && key === "defense_type") 
+                  ? "Loading..." 
+                  : `Select ${label}`
+              } />
             </SelectTrigger>
             <SelectContent>
               {options?.map((option: string) => (

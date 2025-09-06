@@ -36,6 +36,7 @@ interface TestResult {
   modelId?: string
   progress?: number
   error?: string
+  defenseType?: string
   results?: {
     asr?: number
     accuracy?: number
@@ -45,6 +46,14 @@ interface TestResult {
     latency?: number
     tokenUsage?: number
     categoryWiseASR?: any
+    defenseASR?: number
+    defenseAccuracy?: number
+    defenseRecall?: number
+    defensePrecision?: number
+    defenseF1?: number
+    defenseLatency?: number
+    defenseTokenUsage?: number
+    defenseCategoryWiseASR?: any
   }
 }
 
@@ -274,6 +283,9 @@ export default function TestResultsClient({ testResults }: TestResultsClientProp
                     )}
                     {test.modelId && (
                       <Badge variant="secondary">{test.modelId}</Badge>
+                    )}
+                    {test.defenseType && (
+                      <Badge variant="default" className="bg-blue-500">{test.defenseType}</Badge>
                     )}
                     {getStatusBadge(test.status)}
                   </div>

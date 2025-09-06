@@ -7,6 +7,7 @@ export interface PythonTestRequest {
   customDatasetPath?: string
   curlEndpoint?: string
   attackCategory?: string
+  defenseType?: string
 }
 
 export interface PythonTestResponse {
@@ -31,6 +32,11 @@ export interface PythonTestResponse {
 
 export interface AvailableModelsResponse {
   models: string[]
+  count: number
+}
+
+export interface AvailableDefensesResponse {
+  defenses: string[]
   count: number
 }
 
@@ -63,6 +69,32 @@ class PythonBackendService {
       return {
         models: ['vicuna-13b-v1.5', 'llama-2-7b-chat-hf', 'gpt-3.5-turbo-1106', 'gpt-4-0125-preview'],
         count: 4
+      }
+    }
+  }
+
+  // Get available defenses from Python backend
+  async getAvailableDefenses(): Promise<AvailableDefensesResponse> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/defenses`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Error fetching available defenses:', error)
+      // Return fallback defenses if backend is not available
+      return {
+        defenses: ['sanitize_text', 'meta-prompt wrapper', 'Llama Guard'],
+        count: 3
       }
     }
   }

@@ -26,7 +26,10 @@ export const tests = pgTable('tests', {
   curlEndpoint: text('curl_endpoint'), // For black box: cURL string
   attackCategory: varchar('attack_category', { length: 50 }), // For black box: Phishing, Prompt Injection, etc.
   
-  // Output results
+  // Defense parameters
+  defenseType: varchar('defense_type', { length: 50 }), // sanitize_text, meta-prompt wrapper, Llama Guard
+  
+  // Output results (without defense)
   asr: decimal('asr', { precision: 5, scale: 4 }), // Attack Success Rate (0-1)
   accuracy: decimal('accuracy', { precision: 5, scale: 4 }), // For white box (0-1)
   recall: decimal('recall', { precision: 5, scale: 4 }), // For white box (0-1)
@@ -35,6 +38,16 @@ export const tests = pgTable('tests', {
   latency: decimal('latency', { precision: 8, scale: 3 }), // For black box (seconds)
   tokenUsage: integer('token_usage'), // For black box (numbers, usually in k)
   categoryWiseASR: jsonb('category_wise_asr'), // For black box: JSON object
+  
+  // Defense results (with defense applied)
+  defenseASR: decimal('defense_asr', { precision: 5, scale: 4 }), // Attack Success Rate with defense (0-1)
+  defenseAccuracy: decimal('defense_accuracy', { precision: 5, scale: 4 }), // For white box with defense (0-1)
+  defenseRecall: decimal('defense_recall', { precision: 5, scale: 4 }), // For white box with defense (0-1)
+  defensePrecision: decimal('defense_precision', { precision: 5, scale: 4 }), // For white box with defense (0-1)
+  defenseF1: decimal('defense_f1', { precision: 5, scale: 4 }), // For white box with defense (0-1)
+  defenseLatency: decimal('defense_latency', { precision: 8, scale: 3 }), // For black box with defense (seconds)
+  defenseTokenUsage: integer('defense_token_usage'), // For black box with defense (numbers, usually in k)
+  defenseCategoryWiseASR: jsonb('defense_category_wise_asr'), // For black box with defense: JSON object
   
   // Timestamps
   createdAt: timestamp('created_at').defaultNow().notNull(),
