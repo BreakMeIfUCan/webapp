@@ -7,23 +7,24 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import { 
-  Eye, 
   Brain, 
   Play, 
   Settings, 
   Upload,
   FileText,
-  Image,
   Code,
-  Zap
+  Zap,
+  Shield,
+  Target,
+  Loader2
 } from "lucide-react"
 
-type TestType = "vision" | "nlp"
-type TestCategory = "black" | "gray" | "white"
+type TestCategory = "black" | "white"
 
 interface TestConfig {
-  type: TestType
   category: TestCategory
   name: string
   description: string
@@ -33,83 +34,69 @@ interface TestConfig {
 const testCategories = {
   black: {
     title: "Black Box Testing",
-    description: "Test with no knowledge of internal structure",
+    description: "Test with no knowledge of internal structure - API-based attacks",
     color: "bg-black text-white",
     icon: "⚫"
   },
-  gray: {
-    title: "Gray Box Testing", 
-    description: "Test with partial knowledge of internal structure",
-    color: "bg-gray-600 text-white",
-    icon: "⚪"
-  },
   white: {
     title: "White Box Testing",
-    description: "Test with full knowledge of internal structure", 
+    description: "Test with full knowledge of internal structure - Model-based attacks", 
     color: "bg-white text-black border-2 border-gray-300",
     icon: "⚪"
   }
 }
 
-const visionParameters = {
-  black: [
-    { key: "image_url", label: "Image URL", type: "url", required: true },
-    { key: "prompt", label: "Test Prompt", type: "text", required: true },
-    { key: "expected_output", label: "Expected Output", type: "text", required: false },
-    { key: "confidence_threshold", label: "Confidence Threshold", type: "number", min: 0, max: 1, step: 0.1, required: true }
-  ],
-  gray: [
-    { key: "image_url", label: "Image URL", type: "url", required: true },
-    { key: "prompt", label: "Test Prompt", type: "text", required: true },
-    { key: "model_architecture", label: "Model Architecture", type: "select", options: ["CNN", "Transformer", "ResNet", "ViT"], required: true },
-    { key: "layer_depth", label: "Layer Depth", type: "number", min: 1, max: 100, required: true },
-    { key: "attention_heads", label: "Attention Heads", type: "number", min: 1, max: 32, required: false }
-  ],
-  white: [
-    { key: "image_url", label: "Image URL", type: "url", required: true },
-    { key: "prompt", label: "Test Prompt", type: "text", required: true },
-    { key: "model_weights", label: "Model Weights", type: "file", required: true },
-    { key: "layer_config", label: "Layer Configuration", type: "json", required: true },
-    { key: "gradient_check", label: "Gradient Check", type: "boolean", required: true },
-    { key: "activation_function", label: "Activation Function", type: "select", options: ["ReLU", "Sigmoid", "Tanh", "GELU"], required: true }
-  ]
-}
-
+// NLP Attack Parameters based on your specifications
 const nlpParameters = {
-  black: [
-    { key: "text_input", label: "Text Input", type: "textarea", required: true },
-    { key: "task_type", label: "Task Type", type: "select", options: ["Classification", "Generation", "Translation", "Summarization"], required: true },
-    { key: "expected_output", label: "Expected Output", type: "text", required: false },
-    { key: "max_tokens", label: "Max Tokens", type: "number", min: 1, max: 4096, required: true }
-  ],
-  gray: [
-    { key: "text_input", label: "Text Input", type: "textarea", required: true },
-    { key: "task_type", label: "Task Type", type: "select", options: ["Classification", "Generation", "Translation", "Summarization"], required: true },
-    { key: "model_size", label: "Model Size", type: "select", options: ["Small", "Medium", "Large", "XL"], required: true },
-    { key: "vocabulary_size", label: "Vocabulary Size", type: "number", min: 1000, max: 100000, required: true },
-    { key: "context_length", label: "Context Length", type: "number", min: 128, max: 8192, required: true }
-  ],
   white: [
-    { key: "text_input", label: "Text Input", type: "textarea", required: true },
-    { key: "task_type", label: "Task Type", type: "select", options: ["Classification", "Generation", "Translation", "Summarization"], required: true },
-    { key: "model_weights", label: "Model Weights", type: "file", required: true },
-    { key: "tokenizer_config", label: "Tokenizer Configuration", type: "json", required: true },
-    { key: "attention_mask", label: "Attention Mask", type: "boolean", required: true },
-    { key: "position_encoding", label: "Position Encoding", type: "select", options: ["Absolute", "Relative", "Rotary"], required: true },
-    { key: "dropout_rate", label: "Dropout Rate", type: "number", min: 0, max: 1, step: 0.1, required: true }
+    { 
+      key: "model_id", 
+      label: "Model ID", 
+      type: "select", 
+      required: true,
+      description: "HuggingFace Model ID",
+      options: ["gpt-2", "bert-base-uncased", "roberta-base", "distilbert-base-uncased", "t5-small", "custom"]
+    },
+    { 
+      key: "custom_dataset", 
+      label: "Custom Dataset", 
+      type: "file", 
+      required: true,
+      description: "CSV file containing test data",
+      accept: ".csv"
+    }
+  ],
+  black: [
+    { 
+      key: "curl_endpoint", 
+      label: "cURL Endpoint", 
+      type: "textarea", 
+      required: true,
+      description: "cURL command for querying the model API",
+      placeholder: "curl -X POST https://api.example.com/predict -H 'Content-Type: application/json' -d '{\"text\": \"your input\"}'"
+    },
+    { 
+      key: "attack_category", 
+      label: "Attack Category", 
+      type: "select", 
+      required: true,
+      description: "Type of attack to perform",
+      options: ["Phishing", "Prompt Injection", "Jailbreaking", "Data Extraction"]
+    }
   ]
 }
 
 export default function CreateTestPage() {
-  const [selectedType, setSelectedType] = useState<TestType>("vision")
   const [selectedCategory, setSelectedCategory] = useState<TestCategory>("black")
   const [testConfig, setTestConfig] = useState<TestConfig>({
-    type: "vision",
     category: "black", 
     name: "",
     description: "",
     parameters: {}
   })
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
 
   const handleParameterChange = (key: string, value: any) => {
     setTestConfig(prev => ({
@@ -121,83 +108,95 @@ export default function CreateTestPage() {
     }))
   }
 
-  const handleSubmit = async () => {
-    const config = {
-      ...testConfig,
-      type: selectedType,
-      category: selectedCategory
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError("")
+    setSuccess("")
+
+    try {
+      const config = {
+        ...testConfig,
+        category: selectedCategory
+      }
+      
+      console.log("NLP Test Configuration:", config)
+      
+      // TODO: Send to Python backend for sandboxing and testing
+      // await createTest(config)
+      
+      setSuccess("Test configuration saved successfully!")
+      setTimeout(() => setSuccess(""), 3000)
+    } catch (err) {
+      setError("Failed to create test. Please try again.")
+    } finally {
+      setIsLoading(false)
     }
-    
-    console.log("Test Configuration:", config)
-    // TODO: Send to Python backend for sandboxing and testing
   }
 
   const getParameters = () => {
-    if (selectedType === "vision") {
-      return visionParameters[selectedCategory]
-    } else {
-      return nlpParameters[selectedCategory]
-    }
+    return nlpParameters[selectedCategory]
   }
 
   const renderParameterInput = (param: any) => {
-    const { key, label, type, required, ...props } = param
+    const { key, label, type, required, description, placeholder, options, accept } = param
 
     switch (type) {
       case "select":
         return (
-          <select
-            className="w-full p-2 border rounded-md"
+          <Select
             value={testConfig.parameters[key] || ""}
-            onChange={(e) => handleParameterChange(key, e.target.value)}
+            onValueChange={(value: string) => handleParameterChange(key, value)}
             required={required}
           >
-            <option value="">Select {label}</option>
-            {param.options?.map((option: string) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
+            <SelectTrigger>
+              <SelectValue placeholder={`Select ${label}`} />
+            </SelectTrigger>
+            <SelectContent>
+              {options?.map((option: string) => (
+                <SelectItem key={option} value={option}>{option}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )
       case "textarea":
         return (
-          <textarea
-            className="w-full p-2 border rounded-md min-h-[100px]"
+          <Textarea
             value={testConfig.parameters[key] || ""}
-            onChange={(e) => handleParameterChange(key, e.target.value)}
-            placeholder={`Enter ${label.toLowerCase()}`}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleParameterChange(key, e.target.value)}
+            placeholder={placeholder || `Enter ${label.toLowerCase()}`}
             required={required}
+            className="min-h-[120px]"
           />
         )
       case "file":
         return (
-          <input
-            type="file"
-            className="w-full p-2 border rounded-md"
-            onChange={(e) => handleParameterChange(key, e.target.files?.[0])}
-            required={required}
-          />
-        )
-      case "boolean":
-        return (
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={testConfig.parameters[key] || false}
-              onChange={(e) => handleParameterChange(key, e.target.checked)}
-              required={required}
-            />
-            <span>Enable {label}</span>
+          <div className="space-y-2">
+            <div className="flex items-center justify-center w-full">
+              <label htmlFor={key} className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <Upload className="w-8 h-8 mb-4 text-muted-foreground" />
+                  <p className="mb-2 text-sm text-muted-foreground">
+                    <span className="font-semibold">Click to upload</span> or drag and drop
+                  </p>
+                  <p className="text-xs text-muted-foreground">{accept?.toUpperCase() || "CSV"}</p>
+                </div>
+                <input
+                  id={key}
+                  type="file"
+                  className="hidden"
+                  accept={accept}
+                  onChange={(e) => handleParameterChange(key, e.target.files?.[0])}
+                  required={required}
+                />
+              </label>
+            </div>
+            {testConfig.parameters[key] && (
+              <p className="text-sm text-muted-foreground">
+                Selected: {testConfig.parameters[key].name}
+              </p>
+            )}
           </div>
-        )
-      case "json":
-        return (
-          <textarea
-            className="w-full p-2 border rounded-md min-h-[100px] font-mono text-sm"
-            value={testConfig.parameters[key] || ""}
-            onChange={(e) => handleParameterChange(key, e.target.value)}
-            placeholder={`Enter ${label.toLowerCase()} as JSON`}
-            required={required}
-          />
         )
       default:
         return (
@@ -205,9 +204,8 @@ export default function CreateTestPage() {
             type={type}
             value={testConfig.parameters[key] || ""}
             onChange={(e) => handleParameterChange(key, e.target.value)}
-            placeholder={`Enter ${label.toLowerCase()}`}
+            placeholder={placeholder || `Enter ${label.toLowerCase()}`}
             required={required}
-            {...props}
           />
         )
     }
@@ -216,57 +214,25 @@ export default function CreateTestPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Create New Test</h1>
+        <h1 className="text-3xl font-bold">Create NLP Attack Test</h1>
         <p className="text-muted-foreground">
-          Configure and run tests against AI models with different levels of access
+          Configure and run NLP security tests against language models
         </p>
       </div>
-
-      {/* Test Type Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            Test Type
-          </CardTitle>
-          <CardDescription>
-            Choose the type of AI model you want to test
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Button
-              variant={selectedType === "vision" ? "default" : "outline"}
-              className="h-20 flex flex-col items-center gap-2"
-              onClick={() => setSelectedType("vision")}
-            >
-              <Eye className="h-6 w-6" />
-              <span>Vision Models</span>
-              <span className="text-xs opacity-70">Image processing, object detection</span>
-            </Button>
-            <Button
-              variant={selectedType === "nlp" ? "default" : "outline"}
-              className="h-20 flex flex-col items-center gap-2"
-              onClick={() => setSelectedType("nlp")}
-            >
-              <Brain className="h-6 w-6" />
-              <span>NLP Models</span>
-              <span className="text-xs opacity-70">Text processing, language understanding</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Test Category Selection */}
       <Card>
         <CardHeader>
-          <CardTitle>Test Category</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Attack Type
+          </CardTitle>
           <CardDescription>
-            Select the level of access you have to the model
+            Select the type of NLP attack you want to perform
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Object.entries(testCategories).map(([key, category]) => (
               <Button
                 key={key}
@@ -287,69 +253,158 @@ export default function CreateTestPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            {selectedType === "vision" ? <Eye className="h-5 w-5" /> : <Brain className="h-5 w-5" />}
-            {selectedType.toUpperCase()} Test Configuration
+            <Brain className="h-5 w-5" />
+            NLP Attack Configuration
           </CardTitle>
           <CardDescription>
             Configure parameters for {testCategories[selectedCategory].title.toLowerCase()}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Basic Test Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="test-name">Test Name</Label>
-              <Input
-                id="test-name"
-                value={testConfig.name}
-                onChange={(e) => setTestConfig(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Enter test name"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="test-description">Description</Label>
-              <Input
-                id="test-description"
-                value={testConfig.description}
-                onChange={(e) => setTestConfig(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Enter test description"
-              />
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Parameters */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Test Parameters</h3>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Basic Test Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {getParameters().map((param) => (
-                <div key={param.key} className="space-y-2">
-                  <Label htmlFor={param.key} className="flex items-center gap-2">
-                    {param.label}
-                    {param.required && <Badge variant="destructive" className="text-xs">Required</Badge>}
-                  </Label>
-                  {renderParameterInput(param)}
-                </div>
-              ))}
+              <div className="space-y-2">
+                <Label htmlFor="test-name">Test Name</Label>
+                <Input
+                  id="test-name"
+                  value={testConfig.name}
+                  onChange={(e) => setTestConfig(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Enter test name"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="test-description">Description</Label>
+                <Input
+                  id="test-description"
+                  value={testConfig.description}
+                  onChange={(e) => setTestConfig(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Enter test description"
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Parameters */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Attack Parameters</h3>
+              <div className="grid grid-cols-1 gap-6">
+                {getParameters().map((param) => (
+                  <div key={param.key} className="space-y-2">
+                    <Label htmlFor={param.key} className="flex items-center gap-2">
+                      {param.label}
+                      {param.required && <Badge variant="destructive" className="text-xs">Required</Badge>}
+                    </Label>
+                    {param.description && (
+                      <p className="text-sm text-muted-foreground">{param.description}</p>
+                    )}
+                    {renderParameterInput(param)}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Error/Success Messages */}
+            {error && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+                {success}
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <div className="flex justify-end">
+              <Button 
+                type="submit"
+                size="lg" 
+                className="flex items-center gap-2"
+                disabled={!testConfig.name || isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Creating Test...
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4" />
+                    Run Attack Test
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Expected Outputs Info */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5" />
+            Expected Outputs
+          </CardTitle>
+          <CardDescription>
+            Metrics that will be generated from your attack test
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <h4 className="font-semibold text-foreground">White Box Testing Outputs</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <strong>ASR (Attack Success Rate):</strong> Pie Chart visualization
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <strong>Accuracy:</strong> Percentage (0 to 1)
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  <strong>Recall:</strong> Value between 0 to 1
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <strong>Precision:</strong> Value between 0 to 1
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <strong>F1 Score:</strong> Value between 0 to 1
+                </li>
+              </ul>
+            </div>
+            <div className="space-y-3">
+              <h4 className="font-semibold text-foreground">Black Box Testing Outputs</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <strong>ASR (Attack Success Rate):</strong> Pie Chart visualization
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <strong>Category-wise ASR:</strong> Breakdown by attack type
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  <strong>Latency:</strong> Response time in seconds
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <strong>Token Usage:</strong> Number of tokens consumed (usually in k)
+                </li>
+              </ul>
             </div>
           </div>
         </CardContent>
       </Card>
-
-      {/* Submit Button */}
-      <div className="flex justify-end">
-        <Button 
-          size="lg" 
-          className="flex items-center gap-2"
-          onClick={handleSubmit}
-          disabled={!testConfig.name}
-        >
-          <Play className="h-4 w-4" />
-          Run Test
-        </Button>
-      </div>
     </div>
   )
 }

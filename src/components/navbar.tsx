@@ -59,33 +59,32 @@ export function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-black bg-white">
+    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded border border-black bg-black">
-              <Shield className="h-5 w-5 text-white" />
+            <div className="flex h-8 w-8 items-center justify-center rounded border border-border bg-primary">
+              <Shield className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold text-black">BreakMeIfYouCan</span>
+            <span className="text-xl font-bold text-foreground">BreakMeIfYouCan</span>
           </Link>
 
 
           {/* Auth Section */}
           <div className="flex items-center space-x-4">
             {isLoading ? (
-              <div className="w-20 h-8 bg-gray-200 animate-pulse rounded"></div>
+              <div className="w-20 h-8 bg-muted animate-pulse rounded"></div>
             ) : user ? (
               <div className="flex items-center space-x-3">
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  className="text-black hover:text-gray-600"
                   onClick={() => router.push("/dashboard")}
                 >
                   Dashboard
                 </Button>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                   <UserIcon className="h-4 w-4" />
                   <span>{user.email}</span>
                 </div>
@@ -93,7 +92,6 @@ export function Navbar() {
                   variant="outline" 
                   size="sm"
                   onClick={handleLogout}
-                  className="border-black text-black hover:bg-black hover:text-white"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
@@ -104,7 +102,6 @@ export function Navbar() {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  className="text-black hover:text-gray-600"
                   onClick={() => router.push("/auth/login")}
                 >
                   <LogIn className="mr-2 h-4 w-4" />
@@ -113,7 +110,6 @@ export function Navbar() {
                 <Button 
                   size="sm"
                   onClick={() => router.push("/auth/signup")}
-                  className="bg-black hover:bg-gray-800 text-white"
                 >
                   Get Started
                 </Button>
@@ -138,25 +134,25 @@ export function Navbar() {
 
         {/* Mobile menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200">
+          <div className="md:hidden border-t border-border">
             <div className="px-2 pt-2 pb-3 space-y-1">
               <Link
                 href="/features"
-                className="block px-3 py-2 text-base font-medium text-black hover:text-gray-600"
+                className="block px-3 py-2 text-base font-medium text-foreground hover:text-muted-foreground"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Features
               </Link>
               <Link
                 href="/pricing"
-                className="block px-3 py-2 text-base font-medium text-black hover:text-gray-600"
+                className="block px-3 py-2 text-base font-medium text-foreground hover:text-muted-foreground"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Pricing
               </Link>
               <Link
                 href="/docs"
-                className="block px-3 py-2 text-base font-medium text-black hover:text-gray-600"
+                className="block px-3 py-2 text-base font-medium text-foreground hover:text-muted-foreground"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Docs
@@ -168,7 +164,7 @@ export function Navbar() {
                   <>
                     <Button 
                       variant="ghost" 
-                      className="w-full justify-start text-black"
+                      className="w-full justify-start"
                       onClick={() => {
                         router.push("/dashboard")
                         setIsMobileMenuOpen(false)
@@ -176,13 +172,13 @@ export function Navbar() {
                     >
                       Dashboard
                     </Button>
-                    <div className="px-3 py-2 text-sm text-gray-600 flex items-center">
+                    <div className="px-3 py-2 text-sm text-muted-foreground flex items-center">
                       <UserIcon className="mr-2 h-4 w-4" />
                       {user.email}
                     </div>
                     <Button 
                       variant="outline" 
-                      className="w-full border-black text-black hover:bg-black hover:text-white"
+                      className="w-full"
                       onClick={() => {
                         handleLogout()
                         setIsMobileMenuOpen(false)
@@ -196,13 +192,13 @@ export function Navbar() {
                   <>
                     <Button 
                       variant="ghost" 
-                      className="w-full justify-start text-black"
+                      className="w-full justify-start"
                     >
                       <LogIn className="mr-2 h-4 w-4" />
                       Sign In
                     </Button>
                     <Button 
-                      className="w-full bg-black hover:bg-gray-800 text-white"
+                      className="w-full"
                       onClick={() => {
                         router.push("/auth/login")
                         setIsMobileMenuOpen(false)

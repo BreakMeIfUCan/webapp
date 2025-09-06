@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Home, TestTube, BarChart3, Plus, Settings, LogOut, Shield, User as UserIcon, ChevronRight } from "lucide-react"
+import { Home, Brain, Plus, Settings, LogOut, Shield, User as UserIcon, ChevronRight, Target } from "lucide-react"
 import { 
   Sidebar, 
   SidebarContent, 
@@ -25,7 +25,6 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { logout } from "@/data-access/auth"
 import { useRouter, usePathname } from "next/navigation"
 import { createClient } from "@/utils/supabase/client"
 import type { User } from "@supabase/supabase-js"
@@ -39,58 +38,16 @@ const data = {
       isActive: true,
     },
     {
-      title: "Tests",
-      url: "/dashboard/tests",
-      icon: TestTube,
-      items: [
-        {
-          title: "All Tests",
-          url: "/dashboard/tests",
-        },
-        {
-          title: "Running",
-          url: "/dashboard/tests?status=running",
-        },
-        {
-          title: "Completed",
-          url: "/dashboard/tests?status=completed",
-        },
-        {
-          title: "Failed",
-          url: "/dashboard/tests?status=failed",
-        },
-      ],
-    },
-    {
-      title: "Analytics",
-      url: "/dashboard/metrics",
-      icon: BarChart3,
-      items: [
-        {
-          title: "Overview",
-          url: "/dashboard/metrics",
-        },
-        {
-          title: "Performance",
-          url: "/dashboard/metrics?tab=performance",
-        },
-        {
-          title: "Reports",
-          url: "/dashboard/metrics?tab=reports",
-        },
-      ],
+      title: "Test Results",
+      url: "/dashboard/results",
+      icon: Target,
     },
     {
       title: "Create Test",
       url: "/dashboard/create",
-      icon: Plus,
-    },
-    {
-      title: "Settings",
-      url: "/dashboard/settings",
-      icon: Settings,
-    },
-  ],
+      icon: Brain,
+    }
+  ]
 }
 
 // User Profile Component
@@ -208,22 +165,6 @@ function AppSidebar({ user, isLoading, handleLogout }: {
                     <span>{item.title}</span>
                   </a>
                 </SidebarMenuButton>
-                {item.items && (
-                  <SidebarMenuSub>
-                    {item.items.map((subItem) => (
-                      <SidebarMenuSubItem key={subItem.title}>
-                        <SidebarMenuSubButton 
-                          asChild
-                          isActive={pathname === subItem.url}
-                        >
-                          <a href={subItem.url}>
-                            <span>{subItem.title}</span>
-                          </a>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                )}
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
@@ -280,8 +221,12 @@ export function DashboardSidebar() {
   }, [])
 
   const handleLogout = async () => {
-    const result = await logout()
-    if (result.success) {
+    const supabase = createClient()
+    const result = await supabase.auth.signOut()
+    if (result.error) {
+      console.error('Logout error:', result.error)
+    } else {
+      setUser(null)
       router.push("/auth/login")
     }
   }

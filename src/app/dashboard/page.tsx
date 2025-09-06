@@ -3,73 +3,92 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { 
-  TestTube, 
-  BarChart3, 
+  Brain, 
+  Shield, 
   Clock, 
   CheckCircle, 
   XCircle, 
   PlayCircle,
   TrendingUp,
   Activity,
+  Target,
+  Zap,
+  TestTube,
   Users,
-  Zap
+  BarChart3
 } from "lucide-react"
 import Link from "next/link"
 
 // Placeholder data - replace with server actions later
 const stats = {
-  totalTests: 24,
-  completedTests: 18,
-  runningTests: 3,
-  failedTests: 3,
-  successRate: 75,
-  avgDuration: "2m 34s",
-  totalUsers: 12,
-  activeTests: 3,
+  totalTests: 12,
+  completedTests: 8,
+  runningTests: 2,
+  failedTests: 2,
+  avgASR: 68,
+  avgLatency: "2.1s",
+  totalAttacks: 45,
+  activeTests: 2,
 }
 
 const recentTests = [
   {
     id: "test-001",
-    name: "GPT-4 Adversarial Test",
+    name: "GPT-2 Phishing Attack",
+    type: "black",
     status: "completed",
     createdAt: "2024-01-15T10:30:00Z",
     duration: "2m 34s",
-    successRate: 85,
+    asr: 75,
+    attackCategory: "Phishing",
   },
   {
     id: "test-002", 
-    name: "Vision Model Robustness",
+    name: "BERT White Box Analysis",
+    type: "white",
     status: "running",
     createdAt: "2024-01-15T11:15:00Z",
     duration: "1m 12s",
-    successRate: null,
+    asr: null,
+    modelId: "bert-base-uncased",
   },
   {
     id: "test-003",
-    name: "BERT Sentiment Analysis",
+    name: "RoBERTa Prompt Injection",
+    type: "black",
     status: "failed",
     createdAt: "2024-01-15T09:45:00Z",
     duration: "0m 45s",
-    successRate: 0,
+    asr: 0,
+    attackCategory: "Prompt Injection",
   },
   {
     id: "test-004",
-    name: "DALL-E Image Generation",
+    name: "DistilBERT Jailbreaking",
+    type: "black",
     status: "completed",
     createdAt: "2024-01-14T16:20:00Z",
-    duration: "5m 15s",
-    successRate: 92,
+    duration: "3m 12s",
+    asr: 45,
+    attackCategory: "Jailbreaking",
   },
+  {
+    id: "test-005",
+    name: "T5 Data Extraction",
+    type: "white",
+    status: "completed",
+    createdAt: "2024-01-14T14:30:00Z",
+    duration: "1m 58s",
+    asr: 68,
+    modelId: "t5-small",
+  }
 ]
 
-
-const modelPerformance = [
-  { model: "GPT-4", tests: 8, successRate: 85 },
-  { model: "CLIP", tests: 5, successRate: 78 },
-  { model: "BERT", tests: 6, successRate: 72 },
-  { model: "DALL-E 3", tests: 3, successRate: 92 },
-  { model: "Codex", tests: 2, successRate: 78 },
+const attackCategories = [
+  { name: "Phishing", count: 15, asr: 75 },
+  { name: "Prompt Injection", count: 12, asr: 60 },
+  { name: "Jailbreaking", count: 8, asr: 45 },
+  { name: "Data Extraction", count: 10, asr: 55 }
 ]
 
 export default function DashboardPage() {
@@ -78,16 +97,16 @@ export default function DashboardPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">NLP Attack Dashboard</h1>
           <p className="text-muted-foreground">
-            Welcome back! Here's what's happening with your tests.
+            Monitor your NLP security tests and attack results.
           </p>
         </div>
         <div className="flex items-center space-x-2">
           <Button asChild>
             <Link href="/dashboard/create">
-              <TestTube className="mr-2 h-4 w-4" />
-              Create Test
+              <Brain className="mr-2 h-4 w-4" />
+              Create Attack Test
             </Link>
           </Button>
         </div>
@@ -98,25 +117,25 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Tests</CardTitle>
-            <TestTube className="h-4 w-4 text-muted-foreground" />
+            <Brain className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalTests}</div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">+12%</span> from last month
+              NLP attack tests
             </p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-sm font-medium">Avg ASR</CardTitle>
+            <Target className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.successRate}%</div>
+            <div className="text-2xl font-bold">{stats.avgASR}%</div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">+5%</span> from last month
+              Attack Success Rate
             </p>
           </CardContent>
         </Card>
@@ -136,49 +155,45 @@ export default function DashboardPage() {
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Duration</CardTitle>
+            <CardTitle className="text-sm font-medium">Avg Latency</CardTitle>
             <Clock className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.avgDuration}</div>
+            <div className="text-2xl font-bold">{stats.avgLatency}</div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">-15%</span> faster than last month
+              Response time
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts Row */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-
-        {/* Model Performance */}
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Model Performance</CardTitle>
-            <CardDescription>
-              Success rates by model
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {modelPerformance.map((model) => (
-                <div key={model.model} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{model.model}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {model.successRate}%
-                    </span>
-                  </div>
-                  <Progress value={model.successRate} className="h-2" />
-                  <p className="text-xs text-muted-foreground">
-                    {model.tests} tests
-                  </p>
+      {/* Attack Categories */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Attack Categories</CardTitle>
+          <CardDescription>
+            Performance by attack type
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {attackCategories.map((category) => (
+              <div key={category.name} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">{category.name}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {category.asr}%
+                  </span>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                <Progress value={category.asr} className="h-2" />
+                <p className="text-xs text-muted-foreground">
+                  {category.count} tests
+                </p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Recent Tests and Quick Actions */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -193,36 +208,53 @@ export default function DashboardPage() {
           <CardContent>
             <div className="space-y-4">
               {recentTests.map((test) => (
-                <div key={test.id} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {test.name}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(test.createdAt).toLocaleDateString()} • {test.duration}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {test.successRate !== null && (
-                      <div className="text-right">
-                        <p className="text-sm font-medium">{test.successRate}%</p>
-                        <p className="text-xs text-muted-foreground">success</p>
+                <Link key={test.id} href={`/dashboard/results/${test.id}`}>
+                  <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {test.name}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {test.type === "white" ? "White Box" : "Black Box"}
+                        </Badge>
+                        {test.attackCategory && (
+                          <Badge variant="secondary" className="text-xs">
+                            {test.attackCategory}
+                          </Badge>
+                        )}
+                        {test.modelId && (
+                          <Badge variant="secondary" className="text-xs">
+                            {test.modelId}
+                          </Badge>
+                        )}
                       </div>
-                    )}
-                    <Badge 
-                      variant={
-                        test.status === 'completed' ? 'default' :
-                        test.status === 'running' ? 'secondary' :
-                        'destructive'
-                      }
-                    >
-                      {test.status === 'completed' && <CheckCircle className="mr-1 h-3 w-3" />}
-                      {test.status === 'running' && <PlayCircle className="mr-1 h-3 w-3" />}
-                      {test.status === 'failed' && <XCircle className="mr-1 h-3 w-3" />}
-                      {test.status}
-                    </Badge>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(test.createdAt).toLocaleDateString()} • {test.duration}
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {test.asr !== null && (
+                        <div className="text-right">
+                          <p className="text-sm font-medium">{test.asr}%</p>
+                          <p className="text-xs text-muted-foreground">ASR</p>
+                        </div>
+                      )}
+                      <Badge 
+                        variant={
+                          test.status === 'completed' ? 'default' :
+                          test.status === 'running' ? 'secondary' :
+                          'destructive'
+                        }
+                      >
+                        {test.status === 'completed' && <CheckCircle className="mr-1 h-3 w-3" />}
+                        {test.status === 'running' && <PlayCircle className="mr-1 h-3 w-3" />}
+                        {test.status === 'failed' && <XCircle className="mr-1 h-3 w-3" />}
+                        {test.status}
+                      </Badge>
+                    </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </CardContent>
