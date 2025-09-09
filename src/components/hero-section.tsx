@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Shield, Zap, Target, ArrowRight, Play, CheckCircle } from "lucide-react"
+import Link from "next/link"
 
 export function HeroSection() {
   return (
@@ -28,10 +29,12 @@ export function HeroSection() {
           
           {/* CTA Buttons */}
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href={'/dashboard'}>
             <Button size="lg" className="px-8 py-4 text-lg font-semibold">
               Get Started
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
+            </Link>
             <Button variant="outline" size="lg" className="px-8 py-4 text-lg font-semibold">
               <Play className="mr-2 h-5 w-5" />
               Watch Demo

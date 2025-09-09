@@ -11,10 +11,28 @@ export async function OPTIONS(request: NextRequest) {
   })
 }
 
+// Map frontend defense names to backend expected names
+const mapDefenseType = (frontendDefense: string): string => {
+  const defenseMap: Record<string, string> = {
+    'SmoothLLM': 'SmoothLLM',
+    'Perplexity filtering': 'PerplexityFilter',
+    'Removal of non-dictionary words': 'RemoveNonDictionary',
+    'Synonym substitution': 'SynonymSubstitution'
+  }
+  return defenseMap[frontendDefense] || frontendDefense
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     console.log('Request body:', body)
+    
+    // Transform the request body to map defense type
+    const transformedBody = {
+      ...body,
+      defense: mapDefenseType(body.defense) // Map defense type to backend format
+    }
+    console.log('Transformed body:', transformedBody)
     
     // Try the defense endpoint first, fallback to regular evaluation if not available
     let response = await fetch(`${process.env.PYTHON_BACKEND_URL}/defense/evaluate/whitebox`, {
@@ -22,7 +40,7 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(transformedBody),
       signal: AbortSignal.timeout(30000), // 30 second timeout
     })
 
@@ -35,8 +53,7 @@ export async function POST(request: NextRequest) {
       console.log('Fallback URL:', `${process.env.PYTHON_BACKEND_URL}/nlp/evaluate/whitebox`)
       
       // Remove defense parameter for fallback
-      const fallbackBody = { ...body }
-      delete fallbackBody.defense
+      const { defense, ...fallbackBody } = transformedBody
       
       response = await fetch(`${process.env.PYTHON_BACKEND_URL}/nlp/evaluate/whitebox`, {
         method: 'POST',

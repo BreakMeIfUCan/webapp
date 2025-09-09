@@ -1,5 +1,5 @@
 {
-  "id": "8e668d4a-44bc-4b35-b51d-d18f82b2afab",
+  "id": "dcee4516-2bf9-4857-9a8a-adb5cb75082b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -70,6 +70,25 @@
           "primaryKey": false,
           "notNull": false
         },
+        "defense_type": {
+          "name": "defense_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "max_samples": {
+          "name": "max_samples",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 5
+        },
+        "parent_test_id": {
+          "name": "parent_test_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "asr": {
           "name": "asr",
           "type": "numeric(5, 4)",
@@ -114,6 +133,54 @@
         },
         "category_wise_asr": {
           "name": "category_wise_asr",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "defense_asr": {
+          "name": "defense_asr",
+          "type": "numeric(5, 4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "defense_accuracy": {
+          "name": "defense_accuracy",
+          "type": "numeric(5, 4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "defense_recall": {
+          "name": "defense_recall",
+          "type": "numeric(5, 4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "defense_precision": {
+          "name": "defense_precision",
+          "type": "numeric(5, 4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "defense_f1": {
+          "name": "defense_f1",
+          "type": "numeric(5, 4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "defense_latency": {
+          "name": "defense_latency",
+          "type": "numeric(8, 3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "defense_token_usage": {
+          "name": "defense_token_usage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "defense_category_wise_asr": {
+          "name": "defense_category_wise_asr",
           "type": "jsonb",
           "primaryKey": false,
           "notNull": false

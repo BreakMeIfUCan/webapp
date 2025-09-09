@@ -40,6 +40,7 @@ export async function createTest(data: {
   attackCategory?: string
   defenseType?: string
   maxSamples?: number
+  parentTestId?: string
 }) {
   try {
     const user = await getCurrentUser()
@@ -55,6 +56,7 @@ export async function createTest(data: {
       attackCategory: data.attackCategory || null,
       defenseType: data.defenseType || null,
       maxSamples: data.maxSamples || 5,
+      parentTestId: data.parentTestId || null,
       status: 'pending',
     }).returning()
     
@@ -111,6 +113,26 @@ export async function getTestById(testId: string) {
   } catch (error) {
     console.error('Error fetching test:', error)
     return null
+  }
+}
+
+// Get defense tests for a given parent test
+export async function getDefenseTestsByParentId(parentId: string) {
+  try {
+    const user = await getCurrentUser()
+    
+    const defenseTests = await db.select().from(tests).where(
+      and(eq(tests.parentTestId, parentId), eq(tests.userId, user.id))
+    ).orderBy(desc(tests.createdAt))
+    
+    return defenseTests.map(test => ({
+      ...test,
+      createdAt: test.createdAt.toISOString(),
+      completedAt: test.completedAt?.toISOString(),
+    }))
+  } catch (error) {
+    console.error('Error fetching defense tests by parent ID:', error)
+    return []
   }
 }
 

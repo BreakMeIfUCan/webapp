@@ -7,25 +7,25 @@ export default async function TestResultsPage() {
   
   // Transform data for display
   const testResults = tests.map(test => ({
-    id: test.id,
-    name: test.name,
-    type: test.category,
-    status: test.status,
-    createdAt: test.createdAt,
-    completedAt: test.completedAt,
-    attackCategory: test.attackCategory || undefined,
-    modelId: test.modelId || undefined,
-    progress: test.progress || undefined,
-    error: test.error || undefined,
+    id: (test as any).id,
+    name: (test as any).name,
+    type: (test as any).category,
+    status: (test as any).status,
+    createdAt: (test as any).createdAt,
+    completedAt: (test as any).completedAt,
+    attackCategory: (test as any).attackCategory || undefined,
+    modelId: (test as any).modelId || undefined,
+    progress: (test as any).progress || undefined,
+    error: (test as any).error || undefined,
     results: {
-      asr: test.asr ? parseFloat(test.asr) : undefined,
-      accuracy: test.accuracy ? parseFloat(test.accuracy) : undefined,
-      recall: test.recall ? parseFloat(test.recall) : undefined,
-      precision: test.precision ? parseFloat(test.precision) : undefined,
-      f1: test.f1 ? parseFloat(test.f1) : undefined,
-      latency: test.latency ? parseFloat(test.latency) : undefined,
-      tokenUsage: test.tokenUsage || undefined,
-      categoryWiseASR: test.categoryWiseASR,
+      asr: (test as any).asr ? parseFloat((test as any).asr) : undefined,
+      accuracy: (test as any).accuracy ? parseFloat((test as any).accuracy) : undefined,
+      recall: (test as any).recall ? parseFloat((test as any).recall) : undefined,
+      precision: (test as any).precision ? parseFloat((test as any).precision) : undefined,
+      f1: (test as any).f1 ? parseFloat((test as any).f1) : undefined,
+      latency: (test as any).latency ? parseFloat((test as any).latency) : undefined,
+      tokenUsage: (test as any).tokenUsage || undefined,
+      categoryWiseASR: (test as any).categoryWiseASR,
     }
   }))
 

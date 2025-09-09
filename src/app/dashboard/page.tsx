@@ -30,17 +30,17 @@ export default async function DashboardPage() {
 
   // Get recent tests (limit to 5)
   const recentTestsData = recentTests.slice(0, 5).map(test => ({
-    id: test.id,
-    name: test.name,
-    type: test.category,
-    status: test.status,
-    createdAt: test.createdAt,
-    duration: test.completedAt ? 
-      `${Math.round((new Date(test.completedAt).getTime() - new Date(test.createdAt).getTime()) / 60000)}m` : 
+    id: (test as any).id,
+    name: (test as any).name,
+    type: (test as any).category,
+    status: (test as any).status,
+    createdAt: (test as any).createdAt,
+    duration: (test as any).completedAt ? 
+      `${Math.round((new Date((test as any).completedAt).getTime() - new Date((test as any).createdAt).getTime()) / 60000)}m` : 
       "Running",
-    asr: test.asr ? Math.round(parseFloat(test.asr) * 100) : null,
-    attackCategory: test.attackCategory,
-    modelId: test.modelId,
+    asr: (test as any).asr ? Math.round(parseFloat((test as any).asr) * 100) : null,
+    attackCategory: (test as any).attackCategory,
+    modelId: (test as any).modelId,
   }))
   return (
     <div className="space-y-6">

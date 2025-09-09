@@ -1,1 +1,0 @@
-ALTER TABLE "tests" ADD COLUMN "max_samples" integer DEFAULT 5;

@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge"
 import { useRouter, usePathname } from "next/navigation"
 import { createClient } from "@/utils/supabase/client"
 import type { User } from "@supabase/supabase-js"
+import Link from "next/link"
 
 const data = {
   navMain: [
@@ -138,6 +139,7 @@ function AppSidebar({ user, isLoading, handleLogout }: {
     <Sidebar variant="inset">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-2">
+          <Link href={"/"}>
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Shield className="h-4 w-4" />
           </div>
@@ -147,7 +149,9 @@ function AppSidebar({ user, isLoading, handleLogout }: {
               Model Testing Platform
             </span>
           </div>
+          </Link>
         </div>
+        
       </SidebarHeader>
       
       <SidebarContent>
