@@ -68,29 +68,29 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
-        <Card className="border-black">
+        <Card>
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded border border-black bg-black">
-                <Shield className="h-6 w-6 text-white" />
+              <div className="flex h-12 w-12 items-center justify-center rounded border border-border bg-primary">
+                <Shield className="h-6 w-6 text-primary-foreground" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold text-black">Create account</CardTitle>
-            <CardDescription className="text-gray-600">
+            <CardTitle className="text-2xl font-bold">Create account</CardTitle>
+            <CardDescription>
               Get started with your free account
             </CardDescription>
           </CardHeader>
           <CardContent>
             {error && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded mb-4">
+              <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded mb-4">
                 {error}
               </div>
             )}
             
             {success && (
-              <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded mb-4">
+              <div className="p-3 text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded mb-4">
                 {success}
               </div>
             )}
@@ -98,7 +98,7 @@ export default function SignupPage() {
             <form onSubmit={handleSignup} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-black">First Name</Label>
+                  <Label htmlFor="firstName" className="">First Name</Label>
                   <Input
                     id="firstName"
                     type="text"
@@ -106,11 +106,11 @@ export default function SignupPage() {
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="First name"
                     required
-                    className="border-black"
+                    className=""
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-black">Last Name</Label>
+                  <Label htmlFor="lastName" className="">Last Name</Label>
                   <Input
                     id="lastName"
                     type="text"
@@ -118,13 +118,13 @@ export default function SignupPage() {
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Last name"
                     required
-                    className="border-black"
+                    className=""
                   />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-black">Email</Label>
+                <Label htmlFor="email" className="">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -132,12 +132,12 @@ export default function SignupPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
-                  className="border-black"
+                  className=""
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-black">Password</Label>
+                <Label htmlFor="password" className="">Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -156,16 +156,16 @@ export default function SignupPage() {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-500" />
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-500" />
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
                   </Button>
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-black">Confirm Password</Label>
+                <Label htmlFor="confirmPassword" className="">Confirm Password</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -184,9 +184,9 @@ export default function SignupPage() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-500" />
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-500" />
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
                   </Button>
                 </div>
@@ -194,7 +194,7 @@ export default function SignupPage() {
               
               <Button
                 type="submit"
-                className="w-full bg-black hover:bg-gray-800 text-white"
+                className="w-full"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -209,11 +209,11 @@ export default function SignupPage() {
             </form>
             
             <div className="mt-6 text-center">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-muted-foreground">
                 Already have an account?{" "}
                 <Button
                   variant="link"
-                  className="text-black hover:text-gray-600 p-0 h-auto"
+                  className="text-foreground hover:text-muted-foreground p-0 h-auto"
                   onClick={() => router.push("/auth/login")}
                 >
                   Sign in

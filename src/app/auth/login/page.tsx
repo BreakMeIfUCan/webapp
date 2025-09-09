@@ -36,7 +36,7 @@ export default function LoginPage() {
         setError(error.message)
       } else {
         setSuccess("Login successful!")
-        router.push("/")
+        router.push("/dashboard")
       }
     } catch (err) {
       setError("An unexpected error occurred")
@@ -47,38 +47,38 @@ export default function LoginPage() {
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
-        <Card className="border-black">
+        <Card>
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded border border-black bg-black">
-                <Shield className="h-6 w-6 text-white" />
+              <div className="flex h-12 w-12 items-center justify-center rounded border border-border bg-primary">
+                <Shield className="h-6 w-6 text-primary-foreground" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold text-black">
+            <CardTitle className="text-2xl font-bold">
               Welcome back
             </CardTitle>
-            <CardDescription className="text-gray-600">
+            <CardDescription>
               Sign in to your account to continue
             </CardDescription>
           </CardHeader>
           <CardContent>
             {error && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded mb-4">
+              <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded mb-4">
                 {error}
               </div>
             )}
             
             {success && (
-              <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded mb-4">
+              <div className="p-3 text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded mb-4">
                 {success}
               </div>
             )}
 
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-black">Email</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -86,12 +86,12 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
-                  className="border-black"
+                  className=""
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-black">Password</Label>
+                <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -100,7 +100,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     required
-                    className="border-black pr-10"
+                    className="pr-10"
                   />
                   <Button
                     type="button"
@@ -110,9 +110,9 @@ export default function LoginPage() {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-500" />
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-500" />
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
                   </Button>
                 </div>
@@ -120,7 +120,7 @@ export default function LoginPage() {
               
               <Button
                 type="submit"
-                className="w-full bg-black hover:bg-gray-800 text-white"
+                className="w-full"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -137,15 +137,15 @@ export default function LoginPage() {
             <div className="mt-6 text-center space-y-2">
               <Link
                 href="/auth/forgot-password"
-                className="text-sm text-black hover:text-gray-600 underline"
+                className="text-sm text-foreground hover:text-muted-foreground underline"
               >
                 Forgot your password?
               </Link>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
                 <Link
                   href="/auth/signup"
-                  className="text-black hover:text-gray-600 underline"
+                  className="text-foreground hover:text-muted-foreground underline"
                 >
                   Sign up
                 </Link>

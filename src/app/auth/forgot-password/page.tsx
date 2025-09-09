@@ -40,38 +40,38 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
-        <Card className="border-black">
+        <Card>
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded border border-black bg-black">
-                <Shield className="h-6 w-6 text-white" />
+              <div className="flex h-12 w-12 items-center justify-center rounded border border-border bg-primary">
+                <Shield className="h-6 w-6 text-primary-foreground" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold text-black">
+            <CardTitle className="text-2xl font-bold">
               Reset password
             </CardTitle>
-            <CardDescription className="text-gray-600">
+            <CardDescription>
               Enter your email to receive a reset link
             </CardDescription>
           </CardHeader>
           <CardContent>
             {error && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded mb-4">
+              <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded mb-4">
                 {error}
               </div>
             )}
             
             {success && (
-              <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded mb-4">
+              <div className="p-3 text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded mb-4">
                 {success}
               </div>
             )}
 
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-black">Email</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -79,13 +79,13 @@ export default function ForgotPasswordPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
-                  className="border-black"
+                  className=""
                 />
               </div>
               
               <Button
                 type="submit"
-                className="w-full bg-black hover:bg-gray-800 text-white"
+                className="w-full"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -102,7 +102,7 @@ export default function ForgotPasswordPage() {
             <div className="mt-6 text-center">
               <Link
                 href="/auth/login"
-                className="text-sm text-black hover:text-gray-600 underline flex items-center justify-center"
+                className="text-sm text-foreground hover:text-muted-foreground underline flex items-center justify-center"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to sign in

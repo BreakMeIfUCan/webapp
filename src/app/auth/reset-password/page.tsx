@@ -83,33 +83,33 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
-        <Card className="border-black">
+        <Card className="">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded border border-black bg-black">
-                <Shield className="h-6 w-6 text-white" />
+              <div className="flex h-12 w-12 items-center justify-center rounded border border-border bg-primary">
+                <Shield className="h-6 w-6 text-primary-foreground" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold text-black">Reset Password</CardTitle>
-            <CardDescription className="text-gray-600">Enter your new password</CardDescription>
+            <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
+            <CardDescription className="text-muted-foreground">Enter your new password</CardDescription>
           </CardHeader>
 
           <CardContent>
             {isCheckingSession ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
-                <span className="ml-2 text-gray-600">Verifying reset link...</span>
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-muted-foreground">Verifying reset link...</span>
               </div>
             ) : !isValidSession ? (
               <div className="text-center py-8">
-                <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded mb-4">
+                <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded mb-4">
                   Invalid or expired reset link. Please request a new password reset.
                 </div>
                 <Link
                   href="/auth/forgot-password"
-                  className="text-sm text-black hover:text-gray-600 underline"
+                  className="text-sm text-foreground hover:text-muted-foreground underline"
                 >
                   Request a new password reset
                 </Link>
@@ -117,20 +117,20 @@ export default function ResetPasswordPage() {
             ) : (
               <>
                 {error && (
-                  <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded mb-4">
+                  <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded mb-4">
                     {error}
                   </div>
                 )}
 
                 {success && (
-                  <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded mb-4">
+                  <div className="p-3 text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded mb-4">
                     {success}
                   </div>
                 )}
 
                 <form onSubmit={handlePasswordUpdate} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="password" className="text-black">New Password</Label>
+                    <Label htmlFor="password" className="">New Password</Label>
                     <div className="relative">
                       <Input
                         id="password"
@@ -139,7 +139,7 @@ export default function ResetPasswordPage() {
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Enter new password"
                         required
-                        className="border-black pr-10"
+                        className="border-border pr-10"
                       />
                       <Button
                         type="button"
@@ -148,13 +148,13 @@ export default function ResetPasswordPage() {
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <EyeOff className="h-4 w-4 text-gray-500" /> : <Eye className="h-4 w-4 text-gray-500" />}
+                        {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                       </Button>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-black">Confirm New Password</Label>
+                    <Label htmlFor="confirmPassword" className="">Confirm New Password</Label>
                     <div className="relative">
                       <Input
                         id="confirmPassword"
@@ -163,7 +163,7 @@ export default function ResetPasswordPage() {
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Confirm new password"
                         required
-                        className="border-black pr-10"
+                        className="border-border pr-10"
                       />
                       <Button
                         type="button"
@@ -172,12 +172,12 @@ export default function ResetPasswordPage() {
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       >
-                        {showConfirmPassword ? <EyeOff className="h-4 w-4 text-gray-500" /> : <Eye className="h-4 w-4 text-gray-500" />}
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                       </Button>
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full bg-black hover:bg-gray-800 text-white" disabled={isLoading}>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -190,7 +190,7 @@ export default function ResetPasswordPage() {
                 <div className="mt-6 text-center">
                   <Button
                     variant="link"
-                    className="text-black hover:text-gray-600 p-0 h-auto"
+                    className="text-foreground hover:text-muted-foreground p-0 h-auto"
                     onClick={() => router.push("/auth/login")}
                   >
                     <ArrowLeft className="mr-2 h-4 w-4" />
