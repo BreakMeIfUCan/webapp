@@ -100,7 +100,7 @@ const getNlpParameters = (availableModels: string[], availableDefenses: string[]
       type: "textarea", 
       required: true,
       description: "cURL command for querying the model API",
-      placeholder: "curl \"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent\" -H 'Content-Type: application/json' -H 'X-goog-api-key: YOUR_API_KEY' -X POST -d '{\"contents\": [{\"parts\": [{\"text\": \"Explain how AI works in a few words\"}]}]}'"
+      placeholder: "curl \"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent\" -H 'Content-Type: application/json' -H 'X-goog-api-key: YOUR_API_KEY' -X POST -d '{\"contents\": [{\"parts\": [{\"text\": \"Explain how AI works in a few words\"}]}]}'"
     },
     { 
       key: "attack_category", 
@@ -277,7 +277,7 @@ export default function CreateTestPage() {
 
   // Helper function to autofill cURL command
   const handleAutofillCurl = () => {
-    const defaultCurl = `curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent" \\
+    const defaultCurl = `curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent" \\
 -H 'Content-Type: application/json' \\
 -H 'X-goog-api-key: YOUR_API_KEY' \\
 -X POST \\

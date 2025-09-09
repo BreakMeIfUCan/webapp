@@ -28,7 +28,7 @@ import {
 import Link from "next/link"
 import ASRPieChart from "@/components/charts/asr-pie-chart"
 import SingleCategoryASR from "@/components/charts/single-category-asr"
-import { submitDefenseEvaluation, createTest, updateTestStatus } from "@/data-access/tests"
+import { submitDefenseEvaluation } from "@/data-access/tests"
 import { pythonBackend } from "@/lib/python-backend"
 
 interface TestData {
@@ -158,51 +158,23 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
         throw new Error(pythonResponse.error || 'Defense evaluation failed')
       }
 
-      console.log('✅ Defense evaluation completed, creating new test entry...')
-      // Create a new test entry for this defense evaluation
-      const newTestData = {
-        name: `${testData.name} - ${defenseType} Defense`,
-        description: `Defense evaluation using ${defenseType} on original test: ${testData.name}`,
-        category: testData.type as 'white' | 'black',
-        modelId: testData.modelId,
-        curlEndpoint: testData.curlEndpoint,
-        attackCategory: testData.attackCategory,
-        defenseType: defenseType,
-        maxSamples: 5,
-        parentTestId: testData.id, // Link to the original test
-      }
-
-      const result = await createTest(newTestData)
+      console.log('✅ Defense evaluation completed, updating original test with defense results...')
       
-      if (!result.success) {
-        console.error('❌ Failed to create new test:', result.error)
-        throw new Error(result.error || 'Failed to create new test')
-      }
-
-      // Update the new test with the defense results
       if (!pythonResponse.results) {
         throw new Error('No results received from defense evaluation')
       }
 
-      const updateResult = await updateTestStatus(result.testId!, 'completed', {
-        asr: pythonResponse.results.asr,
-        accuracy: 'accuracy' in pythonResponse.results ? pythonResponse.results.accuracy : undefined,
-        recall: 'recall' in pythonResponse.results ? pythonResponse.results.recall : undefined,
-        precision: 'precision' in pythonResponse.results ? pythonResponse.results.precision : undefined,
-        f1: 'f1' in pythonResponse.results ? pythonResponse.results.f1 : undefined,
-        latency: 'latency' in pythonResponse.results ? pythonResponse.results.latency : undefined,
-        tokenUsage: 'token_usage' in pythonResponse.results ? pythonResponse.results.token_usage : undefined,
-        categoryWiseASR: 'category_wise_asr' in pythonResponse.results ? pythonResponse.results.category_wise_asr : undefined,
-      })
+      // Update the original test with defense results
+      const updateResult = await submitDefenseEvaluation(testData.id, defenseType, pythonResponse.results)
 
       if (!updateResult.success) {
-        console.error('❌ Failed to update new test with results:', updateResult.error)
-        throw new Error(updateResult.error || 'Failed to update new test with results')
+        console.error('❌ Failed to update test with defense results:', updateResult.error)
+        throw new Error(updateResult.error || 'Failed to update test with defense results')
       }
 
       console.log('✅ Defense evaluation completed successfully')
-      // Navigate to the new test results page
-      window.location.href = `/dashboard/results/${result.testId}`
+      // Refresh the current page to show updated results
+      window.location.reload()
     } catch (error) {
       console.error('Error running defense evaluation:', error)
       setDefenseError(error instanceof Error ? error.message : 'Failed to run defense evaluation')

@@ -43,7 +43,7 @@ interface TestData {
   completedAt?: Date | string | null
   error?: string | null
   
-  // Test results
+  // Attack results
   asr?: number | null
   accuracy?: number | null
   recall?: number | null
@@ -52,11 +52,20 @@ interface TestData {
   latency?: number | null
   tokenUsage?: number | null
   categoryWiseASR?: Record<string, number> | null
+  
+  // Defense results
+  defenseASR?: number | null
+  defenseAccuracy?: number | null
+  defenseRecall?: number | null
+  defensePrecision?: number | null
+  defenseF1?: number | null
+  defenseLatency?: number | null
+  defenseTokenUsage?: number | null
+  defenseCategoryWiseASR?: Record<string, number> | null
 }
 
 interface TestComparisonClientProps {
-  originalTest: TestData
-  defenseTests: TestData[]
+  test: TestData
 }
 
 function formatDuration(durationMs: number): string {
@@ -89,13 +98,10 @@ function getASRIcon(asr: number | null | undefined) {
   return <CheckCircle className="h-4 w-4 text-green-600" />
 }
 
-export default function TestComparisonClient({ originalTest, defenseTests }: TestComparisonClientProps) {
-  const hasAttackResults = originalTest.asr !== undefined
-  const hasDefenseResults = defenseTests.length > 0 && defenseTests.some(test => test.asr !== undefined)
+export default function TestComparisonClient({ test }: TestComparisonClientProps) {
+  const hasAttackResults = test.asr !== undefined
+  const hasDefenseResults = test.defenseASR !== undefined
   const hasBothResults = hasAttackResults && hasDefenseResults
-  
-  // Get the first completed defense test for comparison
-  const primaryDefenseTest = defenseTests.find(test => test.status === 'completed' && test.asr !== undefined)
 
   const renderComparisonMetrics = () => {
     if (!hasBothResults) {
@@ -125,46 +131,46 @@ export default function TestComparisonClient({ originalTest, defenseTests }: Tes
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center p-3 bg-red-50 rounded-lg">
                 <div className="text-2xl font-bold text-red-600">
-                  {formatPercentage(originalTest.asr)}
+                  {formatPercentage(test.asr)}
                 </div>
                 <div className="text-sm text-gray-600">Attack Success Rate</div>
-                {getASRIcon(originalTest.asr)}
+                {getASRIcon(test.asr)}
               </div>
               
-              {originalTest.type === 'white' && (
+              {test.type === 'white' && (
                 <>
                   <div className="text-center p-3 bg-blue-50 rounded-lg">
                     <div className="text-2xl font-bold text-blue-600">
-                      {formatPercentage(originalTest.accuracy)}
+                      {formatPercentage(test.accuracy)}
                     </div>
                     <div className="text-sm text-gray-600">Accuracy</div>
                   </div>
                   <div className="text-center p-3 bg-green-50 rounded-lg">
                     <div className="text-2xl font-bold text-green-600">
-                      {formatPercentage(originalTest.recall)}
+                      {formatPercentage(test.recall)}
                     </div>
                     <div className="text-sm text-gray-600">Recall</div>
                   </div>
                   <div className="text-center p-3 bg-purple-50 rounded-lg">
                     <div className="text-2xl font-bold text-purple-600">
-                      {formatPercentage(originalTest.precision)}
+                      {formatPercentage(test.precision)}
                     </div>
                     <div className="text-sm text-gray-600">Precision</div>
                   </div>
                 </>
               )}
               
-              {originalTest.type === 'black' && (
+              {test.type === 'black' && (
                 <>
                   <div className="text-center p-3 bg-blue-50 rounded-lg">
                     <div className="text-2xl font-bold text-blue-600">
-                      {formatNumber(originalTest.latency)}s
+                      {formatNumber(test.latency)}s
                     </div>
                     <div className="text-sm text-gray-600">Latency</div>
                   </div>
                   <div className="text-center p-3 bg-green-50 rounded-lg">
                     <div className="text-2xl font-bold text-green-600">
-                      {originalTest.tokenUsage?.toLocaleString() || "N/A"}
+                      {test.tokenUsage?.toLocaleString() || "N/A"}
                     </div>
                     <div className="text-sm text-gray-600">Token Usage</div>
                   </div>
@@ -176,61 +182,61 @@ export default function TestComparisonClient({ originalTest, defenseTests }: Tes
         </Card>
 
         {/* Defense Results */}
-        {primaryDefenseTest && (
+        {hasDefenseResults && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-blue-600" />
-                Defense Results ({primaryDefenseTest.defenseType})
+                Defense Results ({test.defenseType})
               </CardTitle>
               <CardDescription>
-                Results with {primaryDefenseTest.defenseType} defense applied
+                Results with {test.defenseType} defense applied
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-3 bg-blue-50 rounded-lg">
                   <div className="text-2xl font-bold text-blue-600">
-                    {formatPercentage(primaryDefenseTest.asr)}
+                    {formatPercentage(test.defenseASR)}
                   </div>
                   <div className="text-sm text-gray-600">Attack Success Rate</div>
-                  {getASRIcon(primaryDefenseTest.asr)}
+                  {getASRIcon(test.defenseASR)}
                 </div>
                 
-                {primaryDefenseTest.type === 'white' && (
+                {test.type === 'white' && (
                   <>
                     <div className="text-center p-3 bg-blue-50 rounded-lg">
                       <div className="text-2xl font-bold text-blue-600">
-                        {formatPercentage(primaryDefenseTest.accuracy)}
+                        {formatPercentage(test.defenseAccuracy)}
                       </div>
                       <div className="text-sm text-gray-600">Accuracy</div>
                     </div>
                     <div className="text-center p-3 bg-green-50 rounded-lg">
                       <div className="text-2xl font-bold text-green-600">
-                        {formatPercentage(primaryDefenseTest.recall)}
+                        {formatPercentage(test.defenseRecall)}
                       </div>
                       <div className="text-sm text-gray-600">Recall</div>
                     </div>
                     <div className="text-center p-3 bg-purple-50 rounded-lg">
                       <div className="text-2xl font-bold text-purple-600">
-                        {formatPercentage(primaryDefenseTest.precision)}
+                        {formatPercentage(test.defensePrecision)}
                       </div>
                       <div className="text-sm text-gray-600">Precision</div>
                     </div>
                   </>
                 )}
                 
-                {primaryDefenseTest.type === 'black' && (
+                {test.type === 'black' && (
                   <>
                     <div className="text-center p-3 bg-blue-50 rounded-lg">
                       <div className="text-2xl font-bold text-blue-600">
-                        {formatNumber(primaryDefenseTest.latency)}s
+                        {formatNumber(test.defenseLatency)}s
                       </div>
                       <div className="text-sm text-gray-600">Latency</div>
                     </div>
                     <div className="text-center p-3 bg-green-50 rounded-lg">
                       <div className="text-2xl font-bold text-green-600">
-                        {primaryDefenseTest.tokenUsage?.toLocaleString() || "N/A"}
+                        {test.defenseTokenUsage?.toLocaleString() || "N/A"}
                       </div>
                       <div className="text-sm text-gray-600">Token Usage</div>
                     </div>
@@ -246,9 +252,9 @@ export default function TestComparisonClient({ originalTest, defenseTests }: Tes
   }
 
   const renderDefenseEffectiveness = () => {
-    if (!hasBothResults || !primaryDefenseTest) return null
+    if (!hasBothResults) return null
 
-    const asrImprovement = (originalTest.asr || 0) - (primaryDefenseTest.asr || 0)
+    const asrImprovement = (test.asr || 0) - (test.defenseASR || 0)
     const isEffective = asrImprovement > 0
 
     return (
@@ -259,21 +265,21 @@ export default function TestComparisonClient({ originalTest, defenseTests }: Tes
             Defense Effectiveness Analysis
           </CardTitle>
           <CardDescription>
-            How well the {primaryDefenseTest.defenseType} defense performed
+            How well the {test.defenseType} defense performed
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center p-4 bg-gray-50 rounded-lg">
               <div className="text-3xl font-bold text-gray-800">
-                {formatPercentage(originalTest.asr)}
+                {formatPercentage(test.asr)}
               </div>
               <div className="text-sm text-gray-600">Attack ASR (No Defense)</div>
             </div>
             
             <div className="text-center p-4 bg-gray-50 rounded-lg">
               <div className="text-3xl font-bold text-gray-800">
-                {formatPercentage(primaryDefenseTest.asr)}
+                {formatPercentage(test.defenseASR)}
               </div>
               <div className="text-sm text-gray-600">Defense ASR</div>
             </div>
@@ -301,7 +307,7 @@ export default function TestComparisonClient({ originalTest, defenseTests }: Tes
           
           <div className="mt-4 p-3 bg-blue-50 rounded-lg">
             <div className="text-sm text-blue-800">
-              <strong>Analysis:</strong> The {primaryDefenseTest.defenseType} defense 
+              <strong>Analysis:</strong> The {test.defenseType} defense 
               {isEffective ? ' successfully reduced' : ' failed to reduce'} the attack success rate by{' '}
               {formatPercentage(Math.abs(asrImprovement))}.
               {isEffective 
@@ -316,7 +322,7 @@ export default function TestComparisonClient({ originalTest, defenseTests }: Tes
   }
 
   const renderCategoryComparison = () => {
-    if (!hasBothResults || !originalTest.categoryWiseASR || !primaryDefenseTest?.categoryWiseASR) {
+    if (!hasBothResults || !test.categoryWiseASR || !test.defenseCategoryWiseASR) {
       return null
     }
 
@@ -333,9 +339,9 @@ export default function TestComparisonClient({ originalTest, defenseTests }: Tes
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {Object.keys(originalTest.categoryWiseASR).map((category) => {
-              const attackASR = originalTest.categoryWiseASR![category]
-              const defenseASR = primaryDefenseTest.categoryWiseASR![category]
+            {Object.keys(test.categoryWiseASR!).map((category) => {
+              const attackASR = test.categoryWiseASR![category]
+              const defenseASR = test.defenseCategoryWiseASR![category]
               const improvement = attackASR - (defenseASR || 0)
               const isEffective = improvement > 0
 
@@ -377,20 +383,20 @@ export default function TestComparisonClient({ originalTest, defenseTests }: Tes
               </Button>
             </Link>
           </div>
-          <h1 className="text-3xl font-bold">{originalTest.name}</h1>
+          <h1 className="text-3xl font-bold">{test.name}</h1>
           <p className="text-gray-600 mt-1">
-            {originalTest.type === 'white' ? 'White Box' : 'Black Box'} Attack vs Defense Comparison
+            {test.type === 'white' ? 'White Box' : 'Black Box'} Attack vs Defense Comparison
           </p>
         </div>
         
         <div className="flex items-center gap-2">
-          <Badge variant={originalTest.status === 'completed' ? 'default' : 'secondary'}>
-            {originalTest.status}
+          <Badge variant={test.status === 'completed' ? 'default' : 'secondary'}>
+            {test.status}
           </Badge>
-          {primaryDefenseTest?.defenseType && (
+          {test.defenseType && (
             <Badge variant="outline">
               <Shield className="h-3 w-3 mr-1" />
-              {primaryDefenseTest.defenseType}
+              {test.defenseType}
             </Badge>
           )}
         </div>
@@ -405,34 +411,34 @@ export default function TestComparisonClient({ originalTest, defenseTests }: Tes
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div>
               <div className="font-medium">Test Type</div>
-              <div className="text-gray-600">{originalTest.type === 'white' ? 'White Box' : 'Black Box'}</div>
+              <div className="text-gray-600">{test.type === 'white' ? 'White Box' : 'Black Box'}</div>
             </div>
-            {originalTest.modelId && (
+            {test.modelId && (
               <div>
                 <div className="font-medium">Model</div>
-                <div className="text-gray-600">{originalTest.modelId}</div>
+                <div className="text-gray-600">{test.modelId}</div>
               </div>
             )}
-            {originalTest.attackCategory && (
+            {test.attackCategory && (
               <div>
                 <div className="font-medium">Attack Category</div>
-                <div className="text-gray-600">{originalTest.attackCategory}</div>
+                <div className="text-gray-600">{test.attackCategory}</div>
               </div>
             )}
-            {originalTest.maxSamples && (
+            {test.maxSamples && (
               <div>
                 <div className="font-medium">Max Samples</div>
-                <div className="text-gray-600">{originalTest.maxSamples}</div>
+                <div className="text-gray-600">{test.maxSamples}</div>
               </div>
             )}
             <div>
               <div className="font-medium">Created</div>
-              <div className="text-gray-600">{new Date(originalTest.createdAt).toLocaleDateString()}</div>
+              <div className="text-gray-600">{new Date(test.createdAt).toLocaleDateString()}</div>
             </div>
-            {originalTest.completedAt && (
+            {test.completedAt && (
               <div>
                 <div className="font-medium">Completed</div>
-                <div className="text-gray-600">{new Date(originalTest.completedAt).toLocaleDateString()}</div>
+                <div className="text-gray-600">{new Date(test.completedAt).toLocaleDateString()}</div>
               </div>
             )}
           </div>
@@ -449,14 +455,14 @@ export default function TestComparisonClient({ originalTest, defenseTests }: Tes
       {renderCategoryComparison()}
 
       {/* Error Display */}
-      {originalTest.error && (
+      {test.error && (
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-red-600">
               <XCircle className="h-5 w-5" />
               <span className="font-medium">Error</span>
             </div>
-            <p className="text-red-600 dark:text-red-400 mt-2">{originalTest.error}</p>
+            <p className="text-red-600 dark:text-red-400 mt-2">{test.error}</p>
           </CardContent>
         </Card>
       )}
