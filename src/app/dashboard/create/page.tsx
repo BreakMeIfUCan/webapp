@@ -19,6 +19,7 @@ import {
   Zap,
   Shield,
   Target,
+  Wand2,
   Loader2
 } from "lucide-react"
 import { createTest, updateTestStatus } from "@/data-access/tests"
@@ -64,8 +65,8 @@ const getNlpParameters = (availableModels: string[], availableDefenses: string[]
       label: "Custom Dataset", 
       type: "select", 
       required: true,
-      description: "Dataset to use for testing",
-      options: ["jailbreakbench"]
+      description: "SOTA Dataset to use for testing. Learn more about JailbreakBench: https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors",
+      options: ["JailBreakBench"]
     },
     { 
       key: "max_samples", 
@@ -274,6 +275,28 @@ export default function CreateTestPage() {
     return getNlpParameters(availableModels, availableDefenses)[selectedCategory]
   }
 
+  // Helper function to autofill cURL command
+  const handleAutofillCurl = () => {
+    const defaultCurl = `curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent" \\
+-H 'Content-Type: application/json' \\
+-H 'X-goog-api-key: YOUR_API_KEY' \\
+-X POST \\
+-d '{
+  "contents": [
+    {
+      "parts": [
+        {
+          "text": "Explain how AI works in a few words"
+        }
+      ]
+    }
+  ]
+}'`
+    
+    handleParameterChange("curl_command", defaultCurl)
+  }
+
+
   const renderParameterInput = (param: any) => {
     const { key, label, type, required, description, placeholder, options, accept } = param
 
@@ -300,6 +323,31 @@ export default function CreateTestPage() {
           </Select>
         )
       case "textarea":
+        // Special handling for cURL command field
+        if (key === "curl_command") {
+          return (
+            <div className="space-y-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAutofillCurl}
+                className="flex items-center gap-2"
+              >
+                <Wand2 className="h-4 w-4" />
+                Autofill
+              </Button>
+              <Textarea
+                value={testConfig.parameters[key] || ""}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleParameterChange(key, e.target.value)}
+                placeholder={placeholder || `Enter ${label.toLowerCase()}`}
+                required={required}
+                className="min-h-[120px] font-mono text-sm"
+              />
+            </div>
+          )
+        }
+        
         return (
           <Textarea
             value={testConfig.parameters[key] || ""}
@@ -438,7 +486,26 @@ export default function CreateTestPage() {
                       {param.required && <Badge variant="destructive" className="text-xs">Required</Badge>}
                     </Label>
                     {param.description && (
-                      <p className="text-sm text-muted-foreground">{param.description}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {param.description.split(' ').map((word, index) => {
+                          if (word.startsWith('https://')) {
+                            return (
+                              <span key={index}>
+                                <a 
+                                  href={word} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 underline"
+                                >
+                                  {word}
+                                </a>
+                                {index < param.description.split(' ').length - 1 ? ' ' : ''}
+                              </span>
+                            )
+                          }
+                          return word + (index < param.description.split(' ').length - 1 ? ' ' : '')
+                        })}
+                      </p>
                     )}
                     {renderParameterInput(param)}
                   </div>

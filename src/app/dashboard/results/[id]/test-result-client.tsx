@@ -120,10 +120,12 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
   const { results } = testData
   const [isRunningDefense, setIsRunningDefense] = useState(false)
   const [defenseError, setDefenseError] = useState("")
-  
-  // Debug: Log testData to see what we're working with
-  console.log('🔍 TestResultClient - testData:', testData)
-  console.log('🔍 TestResultClient - defenseType:', testData.defenseType)
+
+  // Helper function to format percentage values, handling 0 correctly
+  const formatPercentage = (value: number | undefined | null): string => {
+    if (value === undefined || value === null) return "N/A"
+    return `${Math.round(value * 100)}%`
+  }
 
   const handleRunDefense = async (defenseType: string) => {
     setIsRunningDefense(true)
@@ -197,7 +199,7 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {results?.asr ? `${Math.round(results.asr * 100)}%` : "N/A"}
+                {formatPercentage(results?.asr)}
               </div>
               <p className="text-xs text-muted-foreground">Attack Success Rate</p>
             </CardContent>
@@ -211,7 +213,7 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {results?.accuracy ? `${Math.round(results.accuracy * 100)}%` : "N/A"}
+                {formatPercentage(results?.accuracy)}
               </div>
               <p className="text-xs text-muted-foreground">Model Accuracy</p>
             </CardContent>
@@ -225,7 +227,7 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {results?.precision ? `${Math.round(results.precision * 100)}%` : "N/A"}
+                {formatPercentage(results?.precision)}
               </div>
               <p className="text-xs text-muted-foreground">Precision Score</p>
             </CardContent>
@@ -239,7 +241,7 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {results?.f1 ? `${Math.round(results.f1 * 100)}%` : "N/A"}
+                {formatPercentage(results?.f1)}
               </div>
               <p className="text-xs text-muted-foreground">F1 Score</p>
             </CardContent>
@@ -272,7 +274,7 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">
-                    {results?.defenseASR ? `${Math.round(results.defenseASR * 100)}%` : "N/A"}
+                    {formatPercentage(results?.defenseASR)}
                   </div>
                   <p className="text-xs text-muted-foreground">ASR with Defense</p>
                 </CardContent>
@@ -286,7 +288,7 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">
-                    {results?.defenseAccuracy ? `${Math.round(results.defenseAccuracy * 100)}%` : "N/A"}
+                    {formatPercentage(results?.defenseAccuracy)}
                   </div>
                   <p className="text-xs text-muted-foreground">Accuracy with Defense</p>
                 </CardContent>
@@ -300,7 +302,7 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">
-                    {results?.defenseRecall ? `${Math.round(results.defenseRecall * 100)}%` : "N/A"}
+                    {formatPercentage(results?.defenseRecall)}
                   </div>
                   <p className="text-xs text-muted-foreground">Recall with Defense</p>
                 </CardContent>
@@ -314,7 +316,7 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">
-                    {results?.defenseF1 ? `${Math.round(results.defenseF1 * 100)}%` : "N/A"}
+                    {formatPercentage(results?.defenseF1)}
                   </div>
                   <p className="text-xs text-muted-foreground">F1 with Defense</p>
                 </CardContent>
@@ -336,19 +338,19 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Recall</span>
                 <span className="text-sm">
-                  {results?.recall ? `${Math.round(results.recall * 100)}%` : "N/A"}
+                  {formatPercentage(results?.recall)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Precision</span>
                 <span className="text-sm">
-                  {results?.precision ? `${Math.round(results.precision * 100)}%` : "N/A"}
+                  {formatPercentage(results?.precision)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">F1 Score</span>
                 <span className="text-sm">
-                  {results?.f1 ? `${Math.round(results.f1 * 100)}%` : "N/A"}
+                  {formatPercentage(results?.f1)}
                 </span>
               </div>
             </CardContent>
@@ -366,9 +368,9 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Overall ASR</span>
                   <div className="flex items-center space-x-2">
-                    <Progress value={results?.asr ? results.asr * 100 : 0} className="w-20 h-2" />
+                    <Progress value={results?.asr !== undefined && results?.asr !== null ? results.asr * 100 : 0} className="w-20 h-2" />
                     <span className="text-sm font-medium">
-                      {results?.asr ? `${Math.round(results.asr * 100)}%` : "N/A"}
+                      {formatPercentage(results?.asr)}
                     </span>
                   </div>
                 </div>
@@ -403,7 +405,7 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {results?.asr ? `${Math.round(results.asr * 100)}%` : "N/A"}
+                {formatPercentage(results?.asr)}
               </div>
               <p className="text-xs text-muted-foreground">Attack Success Rate</p>
             </CardContent>
@@ -483,7 +485,7 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold">
-                    {results?.defenseASR ? `${Math.round(results.defenseASR * 100)}%` : "N/A"}
+                    {formatPercentage(results?.defenseASR)}
                   </div>
                   <p className="text-xs text-muted-foreground">ASR with Defense</p>
                 </CardContent>
@@ -561,8 +563,6 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          {/* Debug: Show defenseType value */}
-          <div className="text-xs text-gray-500">Debug: defenseType = {testData.defenseType || 'null'}</div>
           {testData.defenseType && (
             <Button variant="outline" size="sm" asChild>
               <Link href={`/dashboard/results/${testData.id}/comparison`}>

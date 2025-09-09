@@ -19,9 +19,6 @@ export default async function TestResultPage({ params }: TestResultPageProps) {
     notFound()
   }
   
-  console.log('🔍 Server page - Raw test from getTestById:', test)
-  console.log('🔍 Server page - test.defenseType:', test.defenseType)
-  
   // Transform data for display
   const testData = {
     id: test.id,
@@ -47,9 +44,6 @@ export default async function TestResultPage({ params }: TestResultPageProps) {
       categoryWiseASR: test.categoryWiseASR,
     }
   }
-
-  console.log('🔍 Server page - Final testData object:', testData)
-  console.log('🔍 Server page - testData.defenseType:', testData.defenseType)
 
   return <TestResultClient testData={testData} />
 }

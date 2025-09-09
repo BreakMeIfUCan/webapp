@@ -103,9 +103,6 @@ export async function getTestById(testId: string) {
     
     if (!test) return null
     
-    console.log('🔍 getTestById - Raw test from DB:', test)
-    console.log('🔍 getTestById - defenseType from DB:', test.defenseType)
-    
     return {
       ...test,
       createdAt: test.createdAt.toISOString(),
@@ -214,16 +211,11 @@ export async function submitDefenseEvaluation(testId: string, defenseType: strin
 
     // Map defense results to database fields
     if (results) {
-      console.log('🔍 Defense results.defense_applied:', results.defense_applied)
-      console.log('🔍 Defense parameter defenseType:', defenseType)
-      
       if (results.defense_applied) {
         updateData.defenseType = results.defense_applied
-        console.log('✅ Using defense_applied:', results.defense_applied)
       } else {
         // Fallback: use the defenseType parameter if defense_applied is not available
         updateData.defenseType = defenseType
-        console.log('⚠️ Using fallback defenseType:', defenseType)
       }
       if (results.asr !== undefined) {
         updateData.defenseASR = results.asr
