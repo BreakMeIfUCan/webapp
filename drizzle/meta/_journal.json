@@ -15,6 +15,13 @@
       "when": 1757182610030,
       "tag": "0001_dusty_lady_ursula",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1757357172406,
+      "tag": "0002_shocking_steel_serpent",
+      "breakpoints": true
     }
   ]
 }

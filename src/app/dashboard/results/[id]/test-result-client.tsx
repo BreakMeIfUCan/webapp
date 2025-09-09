@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -20,11 +21,15 @@ import {
   Calendar,
   ArrowLeft,
   Download,
-  RefreshCw
+  RefreshCw,
+  Play,
+  BarChart3
 } from "lucide-react"
 import Link from "next/link"
 import ASRPieChart from "@/components/charts/asr-pie-chart"
 import SingleCategoryASR from "@/components/charts/single-category-asr"
+import { submitDefenseEvaluation } from "@/data-access/tests"
+import { pythonBackend } from "@/lib/python-backend"
 
 interface TestData {
   id: string
@@ -40,12 +45,22 @@ interface TestData {
   error?: string
   defenseType?: string
   results?: {
+    // White box results
     asr?: number
     accuracy?: number
     recall?: number
     precision?: number
     f1?: number
+    total_attacks?: number
+    successful_attacks?: number
+    category_failures?: Record<string, number>
+    
+    // Black box results
     latency?: number
+    token_usage?: number
+    category_wise_asr?: Record<string, number>
+    
+    // Legacy fields for backward compatibility
     tokenUsage?: number
     categoryWiseASR?: any
     defenseASR?: number
@@ -103,6 +118,61 @@ const formatDuration = (start: string, end?: string) => {
 
 export default function TestResultClient({ testData }: TestResultClientProps) {
   const { results } = testData
+  const [isRunningDefense, setIsRunningDefense] = useState(false)
+  const [defenseError, setDefenseError] = useState("")
+  
+  // Debug: Log testData to see what we're working with
+  console.log('🔍 TestResultClient - testData:', testData)
+  console.log('🔍 TestResultClient - defenseType:', testData.defenseType)
+
+  const handleRunDefense = async (defenseType: string) => {
+    setIsRunningDefense(true)
+    setDefenseError("")
+
+    try {
+      // Call the Python backend for defense evaluation (async workflow)
+      const pythonRequest = {
+        testId: testData.id,
+        category: testData.type as 'white' | 'black',
+        modelId: testData.modelId,
+        customDatasetPath: testData.type === 'white' ? 'jailbreakbench' : undefined,
+        curlEndpoint: testData.type === 'black' ? 'curl_command_placeholder' : undefined,
+        attackCategory: testData.attackCategory,
+        defenseType: defenseType,
+        maxSamples: 5,
+      }
+
+      console.log('🛡️ Starting defense evaluation...')
+      console.log('📋 Defense Python Request:', JSON.stringify(pythonRequest, null, 2))
+      
+      const pythonResponse = await pythonBackend.submitDefenseEvaluation(pythonRequest)
+      
+      console.log('📥 Defense Python Response:', JSON.stringify(pythonResponse, null, 2))
+      
+      if (!pythonResponse.success) {
+        console.error('❌ Defense evaluation failed:', pythonResponse.error)
+        throw new Error(pythonResponse.error || 'Defense evaluation failed')
+      }
+
+      console.log('✅ Defense evaluation completed, updating database...')
+      // Update the database with defense results
+      const result = await submitDefenseEvaluation(testData.id, defenseType, pythonResponse.results)
+      
+      if (!result.success) {
+        console.error('❌ Failed to save defense results:', result.error)
+        throw new Error(result.error || 'Failed to save defense results')
+      }
+
+      console.log('✅ Defense evaluation completed successfully')
+      // Refresh the page to show updated results
+      window.location.reload()
+    } catch (error) {
+      console.error('Error running defense evaluation:', error)
+      setDefenseError(error instanceof Error ? error.message : 'Failed to run defense evaluation')
+    } finally {
+      setIsRunningDefense(false)
+    }
+  }
 
   const renderWhiteBoxResults = () => {
     return (
@@ -361,7 +431,7 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {results?.tokenUsage ? `${results.tokenUsage.toLocaleString()}` : "N/A"}
+                {(results?.tokenUsage || results?.token_usage) ? `${(results.tokenUsage || results.token_usage)!.toLocaleString()}` : "N/A"}
               </div>
               <p className="text-xs text-muted-foreground">Token Usage</p>
             </CardContent>
@@ -383,8 +453,8 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
         </div>
 
         {/* Single Category ASR */}
-        {results?.categoryWiseASR && (
-          <SingleCategoryASR categoryWiseASR={results.categoryWiseASR} />
+        {(results?.categoryWiseASR || results?.category_wise_asr) && (
+          <SingleCategoryASR categoryWiseASR={results.categoryWiseASR || results.category_wise_asr} />
         )}
 
         {/* Defense Results */}
@@ -491,6 +561,16 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
           </div>
         </div>
         <div className="flex items-center space-x-2">
+          {/* Debug: Show defenseType value */}
+          <div className="text-xs text-gray-500">Debug: defenseType = {testData.defenseType || 'null'}</div>
+          {testData.defenseType && (
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/dashboard/results/${testData.id}/comparison`}>
+                <BarChart3 className="mr-2 h-4 w-4" />
+                View Comparison
+              </Link>
+            </Button>
+          )}
           {getStatusBadge(testData.status)}
           <Button variant="outline" size="sm">
             <Download className="mr-2 h-4 w-4" />
@@ -592,6 +672,52 @@ export default function TestResultClient({ testData }: TestResultClientProps) {
           </CardHeader>
           <CardContent>
             {testData.type === "white" ? renderWhiteBoxResults() : renderBlackBoxResults()}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Defense Evaluation Section */}
+      {testData.status === "completed" && results && !testData.defenseType && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Defense Evaluation
+            </CardTitle>
+            <CardDescription>
+              Run the same test with defense mechanisms applied to see how they affect the results
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {['SmoothLLM', 'Perplexity filtering', 'Removal of non-dictionary words', 'Synonym substitution'].map((defense) => (
+                <Button
+                  key={defense}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleRunDefense(defense)}
+                  disabled={isRunningDefense}
+                  className="flex items-center gap-2"
+                >
+                  {isRunningDefense ? (
+                    <Activity className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Play className="h-3 w-3" />
+                  )}
+                  {defense}
+                </Button>
+              ))}
+            </div>
+            
+            {defenseError && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                <div className="font-medium">Defense evaluation failed:</div>
+                <div className="mt-1">{defenseError}</div>
+                <div className="mt-2 text-xs text-gray-600">
+                  The system will automatically fall back to regular evaluation if the defense endpoint is unavailable.
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

@@ -19,7 +19,8 @@ import {
   Zap,
   FileText,
   Calendar,
-  TestTube
+  TestTube,
+  BarChart3
 } from "lucide-react"
 import Link from "next/link"
 import ASRPieChart from "@/components/charts/asr-pie-chart"
@@ -303,6 +304,14 @@ export default function TestResultsClient({ testResults }: TestResultsClientProp
                       View Full Report
                     </Link>
                   </Button>
+                  {test.defenseType && (
+                    <Button asChild size="sm" variant="outline">
+                      <Link href={`/dashboard/results/${test.id}/comparison`}>
+                        <BarChart3 className="mr-2 h-4 w-4" />
+                        Compare
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardHeader>

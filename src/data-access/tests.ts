@@ -39,6 +39,7 @@ export async function createTest(data: {
   curlEndpoint?: string
   attackCategory?: string
   defenseType?: string
+  maxSamples?: number
 }) {
   try {
     const user = await getCurrentUser()
@@ -53,6 +54,7 @@ export async function createTest(data: {
       curlEndpoint: data.curlEndpoint || null,
       attackCategory: data.attackCategory || null,
       defenseType: data.defenseType || null,
+      maxSamples: data.maxSamples || 5,
       status: 'pending',
     }).returning()
     
@@ -101,6 +103,9 @@ export async function getTestById(testId: string) {
     
     if (!test) return null
     
+    console.log('🔍 getTestById - Raw test from DB:', test)
+    console.log('🔍 getTestById - defenseType from DB:', test.defenseType)
+    
     return {
       ...test,
       createdAt: test.createdAt.toISOString(),
@@ -122,10 +127,20 @@ export async function updateTestStatus(testId: string, status: 'pending' | 'runn
   f1?: number
   latency?: number
   tokenUsage?: number
+  token_usage?: number
   categoryWiseASR?: any
+  category_wise_asr?: Record<string, number>
+  total_attacks?: number
+  successful_attacks?: number
+  category_failures?: Record<string, number>
   error?: string
 }) {
   try {
+    console.log('💾 UPDATING TEST STATUS:')
+    console.log('🆔 Test ID:', testId)
+    console.log('📊 Status:', status)
+    console.log('📋 Data:', JSON.stringify(data, null, 2))
+    
     const user = await getCurrentUser()
     
     const updateData: any = {
@@ -141,16 +156,22 @@ export async function updateTestStatus(testId: string, status: 'pending' | 'runn
     if (data?.f1 !== undefined) updateData.f1 = data.f1
     if (data?.latency !== undefined) updateData.latency = data.latency
     if (data?.tokenUsage !== undefined) updateData.tokenUsage = data.tokenUsage
+    if (data?.token_usage !== undefined) updateData.tokenUsage = data.token_usage
     if (data?.categoryWiseASR !== undefined) updateData.categoryWiseASR = data.categoryWiseASR
+    if (data?.category_wise_asr !== undefined) updateData.categoryWiseASR = data.category_wise_asr
     if (data?.error) updateData.error = data.error
     if (status === 'completed' || status === 'failed') {
       updateData.completedAt = new Date()
     }
     
+    console.log('💾 Database Update Data:', JSON.stringify(updateData, null, 2))
+    
     await db
       .update(tests)
       .set(updateData)
       .where(and(eq(tests.id, testId), eq(tests.userId, user.id)))
+    
+    console.log('✅ Test status updated successfully')
     
     revalidatePath('/dashboard')
     revalidatePath('/dashboard/results')
@@ -163,7 +184,95 @@ export async function updateTestStatus(testId: string, status: 'pending' | 'runn
   }
 }
 
-// Update test status from webhook (no user authentication required)
+// Submit defense evaluation for an existing test - Async workflow
+export async function submitDefenseEvaluation(testId: string, defenseType: string, results: any) {
+  try {
+    console.log('💾 UPDATING DATABASE WITH DEFENSE RESULTS:')
+    console.log('🆔 Test ID:', testId)
+    console.log('🛡️ Defense Type:', defenseType)
+    console.log('📊 Results:', JSON.stringify(results, null, 2))
+    
+    const user = await getCurrentUser()
+    
+    // Get the existing test
+    const [test] = await db
+      .select()
+      .from(tests)
+      .where(and(eq(tests.id, testId), eq(tests.userId, user.id)))
+      .limit(1)
+    
+    if (!test) {
+      throw new Error('Test not found')
+    }
+
+    // Update test with defense results
+    const updateData: any = {
+      defenseType: defenseType,
+      status: 'completed',
+      updatedAt: new Date(),
+    }
+
+    // Map defense results to database fields
+    if (results) {
+      console.log('🔍 Defense results.defense_applied:', results.defense_applied)
+      console.log('🔍 Defense parameter defenseType:', defenseType)
+      
+      if (results.defense_applied) {
+        updateData.defenseType = results.defense_applied
+        console.log('✅ Using defense_applied:', results.defense_applied)
+      } else {
+        // Fallback: use the defenseType parameter if defense_applied is not available
+        updateData.defenseType = defenseType
+        console.log('⚠️ Using fallback defenseType:', defenseType)
+      }
+      if (results.asr !== undefined) {
+        updateData.defenseASR = results.asr
+      }
+      if (results.accuracy !== undefined) {
+        updateData.defenseAccuracy = results.accuracy
+      }
+      if (results.recall !== undefined) {
+        updateData.defenseRecall = results.recall
+      }
+      if (results.precision !== undefined) {
+        updateData.defensePrecision = results.precision
+      }
+      if (results.f1 !== undefined) {
+        updateData.defenseF1 = results.f1
+      }
+      if (results.latency !== undefined) {
+        updateData.defenseLatency = results.latency
+      }
+      if (results.token_usage !== undefined) {
+        updateData.defenseTokenUsage = results.token_usage
+      }
+      if (results.category_wise_asr) {
+        updateData.defenseCategoryWiseASR = results.category_wise_asr
+      }
+    }
+
+    console.log('💾 Database Update Data:', JSON.stringify(updateData, null, 2))
+    
+    await db
+      .update(tests)
+      .set(updateData)
+      .where(and(eq(tests.id, testId), eq(tests.userId, user.id)))
+    
+    console.log('✅ Database updated successfully')
+    
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/results')
+    revalidatePath(`/dashboard/results/${testId}`)
+    
+    return { success: true, testId }
+  } catch (error) {
+    console.error('Error submitting defense evaluation:', error)
+    return { success: false, error: 'Failed to submit defense evaluation' }
+  }
+}
+
+// Update test status from webhook (no user authentication required) - DEPRECATED: Using async/await workflow now
+/*
 export async function updateTestStatusFromWebhook(testId: string, status: 'pending' | 'running' | 'completed' | 'failed', data?: {
   progress?: number
   asr?: number
@@ -227,6 +336,7 @@ export async function updateTestStatusFromWebhook(testId: string, status: 'pendi
     return { success: false, error: 'Failed to update test status' }
   }
 }
+*/
 
 // Get test statistics for dashboard
 export async function getTestStats() {

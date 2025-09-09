@@ -3,18 +3,24 @@ import { notFound } from "next/navigation"
 import TestResultClient from "./test-result-client"
 
 interface TestResultPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function TestResultPage({ params }: TestResultPageProps) {
+  // Await params before using its properties
+  const { id } = await params
+  
   // Fetch real data from server actions
-  const test = await getTestById(params.id)
+  const test = await getTestById(id)
   
   if (!test) {
     notFound()
   }
+  
+  console.log('🔍 Server page - Raw test from getTestById:', test)
+  console.log('🔍 Server page - test.defenseType:', test.defenseType)
   
   // Transform data for display
   const testData = {
@@ -29,6 +35,7 @@ export default async function TestResultPage({ params }: TestResultPageProps) {
     description: test.description || undefined,
     progress: test.progress || undefined,
     error: test.error || undefined,
+    defenseType: test.defenseType || undefined,
     results: {
       asr: test.asr ? parseFloat(test.asr) : undefined,
       accuracy: test.accuracy ? parseFloat(test.accuracy) : undefined,
@@ -40,6 +47,9 @@ export default async function TestResultPage({ params }: TestResultPageProps) {
       categoryWiseASR: test.categoryWiseASR,
     }
   }
+
+  console.log('🔍 Server page - Final testData object:', testData)
+  console.log('🔍 Server page - testData.defenseType:', testData.defenseType)
 
   return <TestResultClient testData={testData} />
 }

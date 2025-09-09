@@ -21,8 +21,8 @@ import {
   Target,
   Loader2
 } from "lucide-react"
-import { createTest } from "@/data-access/tests"
-import { pythonBackend } from "@/lib/python-backend"
+import { createTest, updateTestStatus } from "@/data-access/tests"
+import { pythonBackend, ATTACK_CATEGORIES, DEFENSE_TYPES } from "@/lib/python-backend"
 
 type TestCategory = "black" | "white"
 
@@ -62,10 +62,26 @@ const getNlpParameters = (availableModels: string[], availableDefenses: string[]
     { 
       key: "custom_dataset", 
       label: "Custom Dataset", 
-      type: "file", 
+      type: "select", 
       required: true,
-      description: "CSV file containing test data",
-      accept: ".csv"
+      description: "Dataset to use for testing",
+      options: ["jailbreakbench"]
+    },
+    { 
+      key: "max_samples", 
+      label: "Max Samples", 
+      type: "number", 
+      required: true,
+      description: "Maximum number of samples to test",
+      placeholder: "5"
+    },
+    { 
+      key: "behaviour", 
+      label: "Behaviour/Attack Category", 
+      type: "select", 
+      required: false,
+      description: "Specific attack behavior to test (optional)",
+      options: ["None", ...ATTACK_CATEGORIES]
     },
     { 
       key: "defense_type", 
@@ -78,12 +94,12 @@ const getNlpParameters = (availableModels: string[], availableDefenses: string[]
   ],
   black: [
     { 
-      key: "curl_endpoint", 
-      label: "cURL Endpoint", 
+      key: "curl_command", 
+      label: "cURL Command", 
       type: "textarea", 
       required: true,
       description: "cURL command for querying the model API",
-      placeholder: "curl -X POST https://api.example.com/predict -H 'Content-Type: application/json' -d '{\"text\": \"your input\"}'"
+      placeholder: "curl \"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent\" -H 'Content-Type: application/json' -H 'X-goog-api-key: YOUR_API_KEY' -X POST -d '{\"contents\": [{\"parts\": [{\"text\": \"Explain how AI works in a few words\"}]}]}'"
     },
     { 
       key: "attack_category", 
@@ -91,7 +107,23 @@ const getNlpParameters = (availableModels: string[], availableDefenses: string[]
       type: "select", 
       required: true,
       description: "Type of attack to perform",
-      options: ["Phishing", "Prompt Injection", "Jailbreaking", "Data Extraction"]
+      options: ATTACK_CATEGORIES
+    },
+    { 
+      key: "max_samples", 
+      label: "Max Samples", 
+      type: "number", 
+      required: true,
+      description: "Maximum number of samples to test",
+      placeholder: "10"
+    },
+    { 
+      key: "behaviour", 
+      label: "Behaviour", 
+      type: "select", 
+      required: false,
+      description: "Specific attack behavior to test (optional)",
+      options: ["None", ...ATTACK_CATEGORIES]
     },
     { 
       key: "defense_type", 
@@ -166,15 +198,20 @@ export default function CreateTestPage() {
             ? testConfig.parameters.defense_type 
             : undefined
 
+          const behaviour = testConfig.parameters.behaviour && testConfig.parameters.behaviour !== 'None'
+            ? testConfig.parameters.behaviour
+            : undefined
+
           const testData = {
             name: testConfig.name,
             description: testConfig.description,
             category: selectedCategory,
             modelId: selectedCategory === 'white' ? testConfig.parameters.model_id : undefined,
-            customDatasetPath: selectedCategory === 'white' ? testConfig.parameters.custom_dataset?.name : undefined,
-            curlEndpoint: selectedCategory === 'black' ? testConfig.parameters.curl_endpoint : undefined,
-            attackCategory: selectedCategory === 'black' ? testConfig.parameters.attack_category : undefined,
+            customDatasetPath: selectedCategory === 'white' ? testConfig.parameters.custom_dataset : undefined,
+            curlEndpoint: selectedCategory === 'black' ? testConfig.parameters.curl_command : undefined,
+            attackCategory: selectedCategory === 'black' ? testConfig.parameters.attack_category : behaviour,
             defenseType: defenseType,
+            maxSamples: parseInt(testConfig.parameters.max_samples) || (selectedCategory === 'white' ? 5 : 10),
           }
 
       // Create test in database
@@ -184,25 +221,36 @@ export default function CreateTestPage() {
         throw new Error(result.error || 'Failed to create test')
       }
 
-          // Submit to Python backend
-          const pythonRequest = {
-            testId: result.testId!,
-            category: selectedCategory,
-            modelId: testData.modelId,
-            customDatasetPath: testData.customDatasetPath,
-            curlEndpoint: testData.curlEndpoint,
-            attackCategory: testData.attackCategory,
-            defenseType: testData.defenseType,
-          }
+      // Submit to Python backend (async workflow - wait for completion)
+      const pythonRequest = {
+        testId: result.testId!,
+        category: selectedCategory,
+        modelId: testData.modelId,
+        customDatasetPath: testData.customDatasetPath,
+        curlEndpoint: testData.curlEndpoint,
+        attackCategory: testData.attackCategory,
+        defenseType: testData.defenseType,
+        maxSamples: testData.maxSamples,
+      }
 
+      console.log('🚀 Starting evaluation...')
+      console.log('📋 Python Request:', JSON.stringify(pythonRequest, null, 2))
+      
       const pythonResponse = await pythonBackend.submitTest(pythonRequest)
       
+      console.log('📥 Python Response:', JSON.stringify(pythonResponse, null, 2))
+      
       if (!pythonResponse.success) {
-        console.warn('Python backend submission failed:', pythonResponse.error)
-        setSuccess("Test created successfully! (Backend submission pending)")
-      } else {
-        setSuccess("Test created and submitted successfully!")
+        console.error('❌ Evaluation failed:', pythonResponse.error)
+        // Update test status to failed
+        await updateTestStatus(result.testId!, 'failed', { error: pythonResponse.error })
+        throw new Error(pythonResponse.error || 'Evaluation failed')
       }
+
+      console.log('✅ Evaluation completed successfully, updating database...')
+      // Update test with results
+      await updateTestStatus(result.testId!, 'completed', pythonResponse.results)
+      setSuccess("Test created and evaluation completed successfully!")
       
       // Reset form
       setTestConfig({

@@ -28,6 +28,7 @@ export const tests = pgTable('tests', {
   
   // Defense parameters
   defenseType: varchar('defense_type', { length: 50 }), // sanitize_text, meta-prompt wrapper, Llama Guard
+  maxSamples: integer('max_samples').default(5), // Maximum number of samples to test
   
   // Output results (without defense)
   asr: decimal('asr', { precision: 5, scale: 4 }), // Attack Success Rate (0-1)
